@@ -1,0 +1,20 @@
+__author__ = 'eidonfiloi'
+
+from data_utils.data_utils import *
+
+
+if __name__ == "__main__":
+
+    #sample frequency in Hz
+    freq = 44100
+    #length of clips for training. Defined in seconds
+    clip_len = 10
+    #block sizes used for training - this defines the size of our input state
+    block_size = freq / 4
+    #Used later for zero-padding song sequences
+    max_seq_len = int(round((freq * clip_len) / block_size))
+    #Step 1 - convert MP3s to WAVs
+    new_directory = convert_folder_to_wav('resources/', freq)
+    #Step 2 - convert WAVs to frequency domain with mean 0 and standard deviation of 1
+    convert_wav_files_to_nptensor('resources/wave/', block_size, max_seq_len, 'data_prepared/test_bach26')
+
