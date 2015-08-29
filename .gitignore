@@ -62,3 +62,4 @@ resources/
 .idea/*
 .idea/
 
+*.wav

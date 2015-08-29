@@ -67,6 +67,7 @@ def convert_folder_to_wav(directory, sample_rate=44100):
 
 def read_wav_as_np(filename):
     data = wav.read(filename)
+    print np.asarray(data[1][0:100]).tolist()
     np_arr = data[1].astype('float32') / 32767.0 #Normalize 16-bit input to [-1, 1] range
     #np_arr = np.array(np_arr)
     return np_arr, data[0]
@@ -74,7 +75,8 @@ def read_wav_as_np(filename):
 
 def write_np_as_wav(X, sample_rate, filename):
     Xnew = X * 32767.0
-    Xnew = Xnew.astype('int16')
+    Xnew = np.subtract(Xnew.astype('int16'), np.ones(Xnew.shape))
+    print np.asarray(Xnew[0:100]).tolist()
     wav.write(filename, sample_rate, Xnew)
     return
 
@@ -176,7 +178,7 @@ def convert_nptensor_to_wav_files(tensor, indices, filename, useTimeDomain=False
         chunks = []
         for x in xrange(num_seqs):
             chunks.append(tensor[i][x])
-        save_generated_example(filename+str(i)+'.wav', chunks,useTimeDomain=useTimeDomain)
+        save_generated_example(filename+str(i)+'.wav', chunks, useTimeDomain=useTimeDomain)
 
 
 def load_training_example(filename, block_size=2048, useTimeDomain=False):

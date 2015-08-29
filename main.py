@@ -1,110 +1,120 @@
 __author__ = 'eidonfiloi'
 
-from sklearn import preprocessing
-import numpy as np
-from recurrent_network.SparseRecurrentLayer import SparseRecurrentLayer
+import logging
 import matplotlib.pyplot as plt
-import time
+from recurrent_network.SRNetwork import *
+import config.sr_network_configuration as base_config
+from data_utils.audio_data_utils import *
 
-
+_LOGGER = logging.getLogger(__name__)
 
 if __name__ == "__main__":
 
-    #Load up the training data
-    print ('Loading training data')
+    logging.basicConfig(level=logging.INFO)
+
+    # Load up the training data
+    _LOGGER.info('Loading training data')
     input_file = 'data_prepared/test_bach26'
-    #X_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
-    #y_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
-    #X_mean is a matrix of size (num_frequency_dims,) containing the mean for each frequency dimension
-    #X_var is a matrix of size (num_frequency_dims,) containing the variance for each frequency dimension
+    # X_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
     X_train = np.load(input_file + '_x.npy')
+    # y_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
     y_train = np.load(input_file + '_y.npy')
+    # X_mean is a matrix of size (num_frequency_dims,) containing the mean for each frequency dimension
     X_mean = np.load(input_file + '_mean.npy')
+    # X_var is a matrix of size (num_frequency_dims,) containing the variance for each frequency dimension
     X_var = np.load(input_file + '_var.npy')
-    print ('Finished loading training data')
+    _LOGGER.info('Finished loading training data')
 
-    spatial_layer = SparseRecurrentLayer(name="SpatialLayer",
-                                         num_inputs=22050,
-                                         sdr_size=1024,
-                                         sparsity=0.05,
-                                         min_weight=1.0,
-                                         max_weight=-1.0,
-                                         duty_cycle_decay=0.02,
-                                         weights_lr=0.0009,
-                                         inhibition_lr=0.005,
-                                         bias_lr=0.0005)
-    recurrent_layer = SparseRecurrentLayer(name="RecurrentLayer",
-                                           num_inputs=1024,
-                                           sdr_size=1024,
-                                           sparsity=0.001,
-                                           min_weight=1.0,
-                                           max_weight=-1.0,
-                                           duty_cycle_decay=0.02,
-                                           weights_lr=0.001,
-                                           inhibition_lr=0.0001,
-                                           bias_lr=0.001)
+    config = base_config.get_config()
 
+    network = SRNetwork(config['network'])
 
-    input_sample_r = X_train[0]
-    input_sample_y_r = y_train[0]
+    input_sample = X_train[0]
+    input_sample_y = y_train[0]
 
-    input_sample = preprocessing.scale(input_sample_r)
-    input_sample_y = preprocessing.scale(input_sample_y_r)
-
-    prev_rec_sdr = np.zeros(1024)
-    epochs = 100
+    epochs = config['global']['epochs']
 
     # plt.axis([1, 32, 1, 32])
     # plt.ion()
     # plt.show()
 
+    output_test = []
+    for k in range(X_train.shape[0]):
+            for i in range(X_train.shape[1]):
+                output_test.append(X_train[k][i])
+    for i in xrange(len(output_test)):
+        #_LOGGER.info('output test \n{0}'.format(output_test[0:20]))
+        output_test[i] *= X_var
+        output_test[i] += X_mean
+    save_generated_example("bach_output_test.wav", output_test, useTimeDomain=True)
 
-    spatial_errors = []
-    recurrent_errors = []
+    output = []
+
+    feedforward_errors = {layer['name']: [] for layer in config['network']['layers']}
+    recurrent_errors = {layer['name']: [] for layer in config['network']['layers']}
+    feedback_errors = {layer['name']: [] for layer in config['network']['layers']}
     for j in range(epochs):
-
-
         for i in range(input_sample.shape[0]):
-            input = input_sample[i]
-            print 'input min is {0}, max is {1}'.format(np.min(input), np.max(input))
-            sdr = spatial_layer.generate(input)
-            spat_er = spatial_layer.learn(input, sdr)
-            next_prev_rec_sdr = recurrent_layer.generate(sdr)
-            rec_er = None
-            if i > 0:
-                rec_er = recurrent_layer.learn(sdr, prev_rec_sdr)
-            prev_rec_sdr = next_prev_rec_sdr
-
-            print 'sdr {0}\n{1}'.format(i, sdr[0:20])
-            print 'prev {0}\n{1}'.format(i, prev_rec_sdr[0:20])
-            if spat_er is not None:
-                spatial_errors.append(np.mean(np.abs(spat_er)**2, axis=0))
-            if rec_er is not None:
-                recurrent_errors.append(np.mean(np.abs(rec_er)**2, axis=0))
-
-            # x, y = np.argwhere(sdr.reshape(32, 32) == 1).T
-            # x_, y_ = np.argwhere(prev_rec_sdr.reshape(32, 32) == 1).T
-            # #plt.scatter(x, y, c='b')
-            # plt.scatter(x_, y_, c='r', marker='s')
-            # plt.draw()
-            # time.sleep(0.05)
-            # plt.cla()
+        #for k in range(X_train.shape[0]):
+            #for i in range(X_train.shape[1]):
+                input_ = input_sample[i]#X_train[k][i]
+                _LOGGER.info(
+                    '\n############## epoch {0}\n'
+                    '############## sequence {1}\n'
+                    '############## sample {2}\n '
+                    '############## input min is {3}, max is {4}'.format(j, 1, i, np.min(input_), np.max(input_)))
+                network_output, forward_err, rec_err, back_err = network.run(input_)
+                for key, v in forward_err.items():
+                    if len(v) > 0:
+                        feedforward_errors[key].append(v[0])
+                for key, v in rec_err.items():
+                    if len(v) > 0:
+                        recurrent_errors[key].append(v[0])
+                for key, v in back_err.items():
+                    if len(v) > 0:
+                        feedback_errors[key].append(v[0])
+                _LOGGER.info('output length {0}\n{1}'.format(len(network_output), network_output[0:20]))
+                output.append(network_output)
+                output_test.append(input_)
 
 
-    plt.subplot(2, 1, 1)
-    plt.plot(range(len(spatial_errors)), spatial_errors, label="spatial errors", color='r')
+                # x, y = np.argwhere(sdr.reshape(32, 32) == 1).T
+                # x_, y_ = np.argwhere(prev_rec_sdr.reshape(32, 32) == 1).T
+                # #plt.scatter(x, y, c='b')
+                # plt.scatter(x_, y_, c='r', marker='s')
+                # plt.draw()
+                # time.sleep(0.05)
+                # plt.cla()
+    for i in xrange(len(output)):
+        output[i] *= X_var
+        output[i] += X_mean
+    save_generated_example("bach_output.wav", output, useTimeDomain=True)
+
+    plt.subplot(3, 1, 1)
+    for k, v in feedforward_errors.items():
+        if len(v) > 0:
+            plt.plot(range(len(v)), v, label=k)
     plt.xlabel('epochs')
-    plt.ylabel('errors')
-    plt.title('spatial')
-    plt.legend(loc=2)
+    plt.ylabel('feedforward_errors')
+    # plt.title('feedforward_errors')
+    plt.legend(loc=1)
 
-    plt.subplot(2,1,2)
-    plt.plot(range(len(recurrent_errors)), recurrent_errors, label="recurrent errors", color='b')
+    plt.subplot(3, 1, 2)
+    for k, v in recurrent_errors.items():
+        if len(v) > 0:
+            plt.plot(range(len(v)), v, label=k)
     plt.xlabel('epochs')
-    plt.ylabel('errors')
-    plt.title('recurrent')
-    plt.legend(loc=2)
+    plt.ylabel('recurrent_errors')
+    # plt.title('recurrent_errors')
+    plt.legend(loc=1)
+
+    plt.subplot(3, 1, 3)
+    for k, v in feedback_errors.items():
+        if len(v) > 0:
+            plt.plot(range(len(v)), v, label=k)
+    plt.xlabel('epochs')
+    plt.ylabel('feedback_errors')
+    # plt.title('feedback_errors')
+    plt.legend(loc=1)
 
     plt.show()
-    print spatial_errors
-    print recurrent_errors
