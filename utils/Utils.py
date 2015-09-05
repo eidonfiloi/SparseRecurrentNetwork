@@ -5,7 +5,7 @@ class Utils(object):
 
     @staticmethod
     def sigmoid_derivative(x):
-        return x*(1-x)
+        return x*(1.0-x)
 
     @staticmethod
     def tanh_derivative(x):

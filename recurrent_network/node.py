@@ -57,7 +57,7 @@ class FeedForwardNode(Node):
     """ A feedforward node capable of generating feedforward output and backpropagating errors """
 
     def __init__(self, parameters):
-        super(FeedForwardNode, self).__init__()
+        super(FeedForwardNode, self).__init__(parameters)
 
         self.lifetime_sparsity = parameters['lifetime_sparsity']
         self.duty_cycle_decay = parameters['duty_cycle_decay']
@@ -109,7 +109,7 @@ class SRAutoEncoderNode(FeedForwardNode):
     """
 
     def __init__(self, parameters):
-        super(SRAutoEncoderNode, self).__init__()
+        super(SRAutoEncoderNode, self).__init__(parameters)
 
         self.recon_bias_lr = parameters['recon_bias_lr']
         self.recon_biases = np.random.rand(self.inputs_size) * (self.max_weight - self.min_weight) + self.min_weight
@@ -319,5 +319,5 @@ class SRAutoEncoderOld(Node):
         self.inhibition = np.zeros((self.sdr_size, self.sdr_size))
         self.duty_cycles = np.zeros(self.sdr_size)
 
-    def backpropagate(self, delta):
+    def backpropagate(self, inputs, delta):
         pass

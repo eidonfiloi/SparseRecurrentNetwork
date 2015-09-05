@@ -1,6 +1,6 @@
 __author__ = 'ptoth'
 
-from Node import *
+from node import *
 import logging
 import abc
 
@@ -21,7 +21,7 @@ class SRLayer(Layer):
     """ Sparse Recurrent Layer contaning feedforward, recurrent and feedback nodes """
 
     def __init__(self, parameters):
-        super(SRLayer, self).__init__()
+        super(SRLayer, self).__init__(parameters)
 
         self.feedforward_node = SRAutoEncoderNode(parameters['feedforward']) if parameters['feedforward'] is not None \
             else None
@@ -39,7 +39,7 @@ class SRLayer(Layer):
         self.feedback_input = None
 
     def generate_feedforward(self, inputs):
-        self.feedback_input = inputs
+        self.feedforward_input = inputs
         self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
         error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
         return self.feedforward_output, error
