@@ -1,6 +1,6 @@
 __author__ = 'eidonfiloi'
 
-from data_utils.audio_data_utils import *
+from data_io.audio_data_utils import *
 
 
 if __name__ == "__main__":
@@ -16,5 +16,5 @@ if __name__ == "__main__":
     #Step 1 - convert MP3s to WAVs
     new_directory = convert_folder_to_wav('resources/', freq)
     #Step 2 - convert WAVs to frequency domain with mean 0 and standard deviation of 1
-    convert_wav_files_to_nptensor(new_directory, block_size, max_seq_len, 'data_prepared/test_bach26', useTimeDomain=True)
+    convert_wav_files_to_nptensor(new_directory, block_size, max_seq_len, 'data_prepared/test_bach26_freq', useTimeDomain=False)
 

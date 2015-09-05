@@ -9,142 +9,196 @@ def get_config():
         'epochs': 10
     }
 
-    verbose = 2
+    verbose = 1
     activation_function = "Sigmoid"
     min_w = -1.0
     max_w = 1.0
-    sparsity = 0.1
+    lifetime_sparsity = 0.01
     duty_cycle_decay = 0.005
-    w_lr = 0.005
+    w_lr = 0.001
     inh_lr = 0.001
-    b_lr = 0.005
+    b_lr = 0.001
+    r_b_lr = 0.001
+    dropout = None
+    zoom = 0.4
+    sparsify = False
+    target_sparsity = 0.1
+    layer_repeat_factor = 10
 
     layer1 = {
         'name': "layer1",
+        'repeat_factor': 40,
         'feedforward': {
             'name': "layer1-feedforward",
-            'num_inputs': 44100,
-            'sdr_size': 1024,
+            'inputs_size': 88200,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'recurrent': {
             'name': "layer1-recurrent",
-            'num_inputs': 1024,
-            'sdr_size': 1024,
+            'inputs_size': 1024,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'feedback': {
             'name': "layer1-feedback",
-            'num_inputs': 1024,
-            'sdr_size': 1024,
+            'inputs_size': 1024,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         }
     }
 
     layer2 = {
         'name': "layer2",
+        'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer2-feedforward",
-            'num_inputs': 1024,
-            'sdr_size': 1024,
+            'inputs_size': 1024,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'recurrent': {
             'name': "layer2-recurrent",
-            'num_inputs': 1024,
-            'sdr_size': 1024,
+            'inputs_size': 1024,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'feedback': {
             'name': "layer2-feedback",
-            'num_inputs': 1024,
-            'sdr_size': 1024,
+            'inputs_size': 1024,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         }
     }
 
     layer3 = {
         'name': "layer3",
+        'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer3-feedforward",
-            'num_inputs': 1024,
-            'sdr_size': 1024,
+            'inputs_size': 1024,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'recurrent': {
             'name': "layer3-recurrent",
-            'num_inputs': 1024,
-            'sdr_size': 1024,
+            'inputs_size': 1024,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'feedback': {
             'name': "layer3-feedback",
-            'num_inputs': 1024,
-            'sdr_size': 1024,
+            'inputs_size': 1024,
+            'output_size': 1024,
             'activation': activation_function,
-            'sparsity': sparsity,
+            'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
+            'dropout': dropout,
+            'zoom': zoom,
+            'sparsify': sparsify,
+            'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
-            'bias_lr': b_lr
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         }
     }
 
