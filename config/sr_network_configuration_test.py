@@ -6,39 +6,41 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 10
+        'epochs': 100
     }
 
     verbose = 1
     activation_function = "Sigmoid"
+    activation_threshold = 0.5
     min_w = -1.0
     max_w = 1.0
     lifetime_sparsity = 0.012
     duty_cycle_decay = 0.005
     w_lr = 0.005
-    inh_lr = 0.01
-    b_lr = 0.005
-    r_b_lr = 0.005
+    inh_lr = 0.001
+    b_lr = 0.001
+    r_b_lr = 0.001
     dropout = None
-    sparsify = True
-    target_sparsity = 0.3
-    zoom = None
+    zoom = 0.4
+    make_sparse = True
+    target_sparsity = 0.1
     layer_repeat_factor = 10
 
     layer1 = {
         'name': "layer1",
-        'repeat_factor': 100,
+        'repeat_factor': 40,
         'feedforward': {
             'name': "layer1-feedforward",
-            'inputs_size': 9,
-            'output_size': 8,
-            'activation': activation_function,
+            'inputs_size': 16,
+            'output_size': 16,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
             'dropout': dropout,
             'zoom': zoom,
-            'sparsify': True,
+            'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
@@ -48,15 +50,16 @@ def get_config():
         },
         'recurrent': {
             'name': "layer1-recurrent",
-            'num_inputs': 8,
-            'output': 8,
-            'activation': activation_function,
+            'inputs_size': 16,
+            'output_size': 16,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
             'dropout': dropout,
             'zoom': zoom,
-            'sparsify': False,
+            'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
@@ -66,15 +69,16 @@ def get_config():
         },
         'feedback': {
             'name': "layer1-feedback",
-            'num_inputs': 8,
-            'output_size': 8,
-            'activation': activation_function,
+            'inputs_size': 24,
+            'output_size': 16,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
             'dropout': dropout,
             'zoom': zoom,
-            'sparsify': False,
+            'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
@@ -89,15 +93,16 @@ def get_config():
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer2-feedforward",
-            'num_inputs': 8,
-            'output_size': 8,
-            'activation': activation_function,
+            'inputs_size': 16,
+            'output_size': 16,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
             'dropout': dropout,
             'zoom': zoom,
-            'sparsify': sparsify,
+            'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
@@ -107,15 +112,16 @@ def get_config():
         },
         'recurrent': {
             'name': "layer2-recurrent",
-            'num_inputs': 8,
-            'output_size': 8,
-            'activation': activation_function,
+            'inputs_size': 16,
+            'output_size': 16,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
             'dropout': dropout,
             'zoom': zoom,
-            'sparsify': sparsify,
+            'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
@@ -125,15 +131,16 @@ def get_config():
         },
         'feedback': {
             'name': "layer2-feedback",
-            'num_inputs': 8,
+            'inputs_size': 16,
             'output_size': 8,
-            'activation': activation_function,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
             'dropout': dropout,
             'zoom': zoom,
-            'sparsify': sparsify,
+            'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'weights_lr': w_lr,
@@ -144,9 +151,10 @@ def get_config():
     }
 
     params['network'] = {
-        'name': "test network",
+        'name': "tst network",
         'verbose': verbose,
-        'visualize_grid_size': 4,
+        'activation_function': "Sigmoid",
+        'visualize_grid_size': 32,
         'input': {
 
         },

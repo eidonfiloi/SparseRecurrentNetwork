@@ -30,6 +30,8 @@ class SRLayer(Layer):
         self.feedback_node = FeedForwardNode(parameters['feedback']) if parameters['feedback'] is not None \
             else None
 
+        self.repeat_factor = parameters['repeat_factor']
+
         self.feedforward_output = None
         self.feedforward_input = None
         self.recurrent_output = None
@@ -42,6 +44,10 @@ class SRLayer(Layer):
         self.feedforward_input = inputs
         self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
         error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
+        if self.repeat_factor is not None:
+            for i in range(self.repeat_factor - 1):
+                self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
+                error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
         return self.feedforward_output, error
 
     def generate_recurrent(self, inputs):

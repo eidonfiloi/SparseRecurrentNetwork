@@ -80,13 +80,13 @@ class FeedForwardNode(Node):
             self.activations = expit(sums)
 
         output = self.activations
-        if self.make_sparse:
-            output = self.activations - np.dot(self.inhibition, self.activations)
-
-            output[output >= self.activation_threshold] = 1.0
-            output[output < self.activation_threshold] = 0.0
-
-            self.duty_cycles = (1.0 - self.duty_cycle_decay) * self.duty_cycles + self.duty_cycle_decay * output
+        # if self.make_sparse:
+        #     output = self.activations - np.dot(self.inhibition, self.activations)
+        #
+        #     output[output >= self.activation_threshold] = 1.0
+        #     output[output < self.activation_threshold] = 0.0
+        #
+        #     self.duty_cycles = (1.0 - self.duty_cycle_decay) * self.duty_cycles + self.duty_cycle_decay * output
 
         return output
 
