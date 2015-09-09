@@ -24,8 +24,32 @@ class Node(object):
         self.activation_function = parameters['activation_function']
         self.activation_threshold = parameters['activation_threshold']
 
-        self.min_weight = parameters['min_weight']
-        self.max_weight = parameters['max_weight']
+        self.b = sqrt(6.0 / (self.inputs_size + self.output_size))
+        self.min_weight = -self.b
+        self.max_weight = self.b
+
+        self.momentum = parameters['momentum']
+        self.velocity = np.zeros((self.inputs_size, self.output_size)) if self.momentum is not None else None
+
+        self.dropout_ratio = parameters['dropout_ratio']
+
+        if self.dropout_ratio is not None:
+            self.dropout = np.ones((self.inputs_size, self.output_size))
+            for i in range(self.inputs_size):
+                for j in range(self.output_size):
+                    self.dropout[i][j] *= np.random.binomial(1, self.dropout_ratio)
+
+        #self.local_activation_radius = np.round(parameters['local_activation_radius'] * self.inputs_size)
+        # if self.local_activation_radius is not None:
+        #     self.overlapping = self.local_activation_radius \
+        #         - np.round((self.inputs_size / self.output_size))
+        #     self.dropout = np.zeros((self.inputs_size, self.output_size))
+        #     for i in range(self.inputs_size):
+        #         start = i*(self.local_activation_radius - self.overlapping)
+        #         end = start + self.local_activation_radius
+        #         for j in range(self.dropout[i].size):
+        #             if start <= j < end:
+        #                 self.dropout[i][j] = 1.0
 
         self.weights_lr = parameters['weights_lr']
         self.bias_lr = parameters['bias_lr']
@@ -34,6 +58,10 @@ class Node(object):
             (self.max_weight - self.min_weight) + self.min_weight
         self.biases = np.random.rand(self.output_size) * (self.max_weight - self.min_weight) + self.min_weight
         self.activations = np.zeros(self.output_size)
+        self.sdr = np.ones(self.output_size)
+        self.learning_rate_decay = parameters['learning_rate_decay']
+        self.local_gain = np.ones((self.inputs_size, self.output_size))
+        self.prev_local_gain = np.ones((self.inputs_size, self.output_size))
 
     @abc.abstractmethod
     def generate_node_output(self, inputs):
@@ -68,7 +96,17 @@ class FeedForwardNode(Node):
         self.duty_cycles = np.zeros(self.output_size)
 
     def generate_node_output(self, inputs):
-        sums = np.dot(inputs.T, self.weights).T + self.biases
+        # if self.local_activation_radius is not None:
+        #     modified_weights = np.multiply(self.dropout, self.weights)
+        #     sums = np.dot(inputs.T, modified_weights).T + self.biases
+        # else:
+        #     sums = np.dot(inputs.T, self.weights).T + self.biases
+
+        if self.dropout_ratio is not None:
+            modified_weights = np.multiply(self.dropout, self.weights)
+            sums = np.dot(inputs.T, modified_weights).T + self.biases
+        else:
+            sums = np.dot(inputs.T, self.weights).T + self.biases
 
         if self.activation_function == "Sigmoid":
             self.activations = expit(sums)
@@ -80,23 +118,37 @@ class FeedForwardNode(Node):
             self.activations = expit(sums)
 
         output = self.activations
-        # if self.make_sparse:
-        #     output = self.activations - np.dot(self.inhibition, self.activations)
-        #
-        #     output[output >= self.activation_threshold] = 1.0
-        #     output[output < self.activation_threshold] = 0.0
-        #
-        #     self.duty_cycles = (1.0 - self.duty_cycle_decay) * self.duty_cycles + self.duty_cycle_decay * output
+        if self.make_sparse:
+            output = self.activations - np.dot(self.inhibition, self.activations)
+
+            output[output >= self.activation_threshold] = 1.0
+            output[output < self.activation_threshold] = 0.0
+
+            self.duty_cycles = (1.0 - self.duty_cycle_decay) * self.duty_cycles + self.duty_cycle_decay * output
+            self.sdr = output
 
         return output
 
     def backpropagate(self, inputs, delta):
 
-        delta_backpropagate = np.dot(self.weights, delta) * Utils.derivative(inputs, self.activation_function)
+        delta_ = delta * self.sdr
+
+        delta_backpropagate = np.dot(self.weights, delta_) * Utils.derivative(inputs, self.activation_function)
 
         for i in range(0, self.weights.shape[0]):
-            self.weights[i] -= self.weights_lr * inputs[i] * delta
-            self.biases -= self.bias_lr * delta
+            if self.momentum is not None:
+                self.velocity[i] = self.momentum * self.velocity[i] + self.weights_lr * inputs[i] \
+                    * (self.local_gain[i] * delta_)
+                self.weights[i] -= self.velocity[i]
+            else:
+                self.weights[i] -= self.weights_lr * inputs[i] * (self.local_gain[i] * delta_)
+            self.biases -= self.bias_lr * delta_
+            if self.learning_rate_decay is not None:
+                for j in range(self.local_gain[i].size):
+                    if (self.prev_local_gain[i][j] * self.local_gain[i][j]) > 0.0:
+                        self.local_gain[i][j] = self.prev_local_gain[i][j] + self.learning_rate_decay
+                    else:
+                        self.local_gain[i][j] = self.prev_local_gain[i][j] * (1.0 - self.learning_rate_decay)
 
         return delta_backpropagate
 
@@ -114,6 +166,29 @@ class SRAutoEncoderNode(FeedForwardNode):
         self.recon_bias_lr = parameters['recon_bias_lr']
         self.recon_biases = np.random.rand(self.inputs_size) * (self.max_weight - self.min_weight) + self.min_weight
 
+    def generate_node_output(self, inputs):
+        sums = np.dot(inputs.T, self.weights).T + self.biases
+
+        if self.activation_function == "Sigmoid":
+            self.activations = expit(sums)
+        elif self.activation_function == "Rectifier":
+            self.activations = np.maximum(0.0, sums)
+        elif self.activation_function == "Tanh":
+            self.activations = np.tanh(sums)
+        else:
+            self.activations = expit(sums)
+
+        output = self.activations
+        if self.make_sparse:
+            output = self.activations - np.dot(self.inhibition, self.activations)
+
+            output[output >= self.activation_threshold] = 1.0
+            output[output < self.activation_threshold] = 0.0
+
+            self.duty_cycles = (1.0 - self.duty_cycle_decay) * self.duty_cycles + self.duty_cycle_decay * output
+
+        return output
+
     def learn_reconstruction(self, target, hidden):
 
         recon = self.reconstruct(hidden)
@@ -126,8 +201,18 @@ class SRAutoEncoderNode(FeedForwardNode):
         recon_delta = error_diff * Utils.derivative(recon, self.activation_function)
 
         for i in range(0, self.weights.T.shape[0]):
-            self.weights.T[i] -= self.weights_lr * target[i] * recon_delta
+            self.weights.T[i] -= self.weights_lr * hidden[i] * (recon_delta * self.local_gain.T[i])
             self.recon_biases -= self.recon_bias_lr * recon_delta
+            if self.learning_rate_decay is not None:
+                for j in range(self.local_gain.T[i].size):
+                    if (self.prev_local_gain.T[i][j] * self.local_gain.T[i][j]) > 0.0:
+                        self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] + self.learning_rate_decay
+                    else:
+                        self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] * (1.0 - self.learning_rate_decay)
+
+        delta_hidden = np.dot(self.weights, recon_delta) * Utils.derivative(target, self.activation_function)
+
+        self.backpropagate(target, delta_hidden)
 
         if self.make_sparse:
             lifetime_sparsity_correction_factor = (np.array([self.lifetime_sparsity

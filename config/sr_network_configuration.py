@@ -6,12 +6,12 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 10
+        'epochs': 5
     }
 
     verbose = 1
     activation_function = "Sigmoid"
-    activation_threshold = 0.5
+    activation_threshold = 0.0
     min_w = -1.0
     max_w = 1.0
     lifetime_sparsity = 0.01
@@ -20,15 +20,18 @@ def get_config():
     inh_lr = 0.001
     b_lr = 0.001
     r_b_lr = 0.001
-    dropout = None
+    dropout_ratio = None
     zoom = 0.4
     make_sparse = False
     target_sparsity = 0.1
-    layer_repeat_factor = 10
+    layer_repeat_factor = 3
+    momentum = 0.5
+    local_activation_radius = 0.2
+    learning_rate_decay = 0.05
 
     layer1 = {
         'name': "layer1",
-        'repeat_factor': 40,
+        'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer1-feedforward",
             'inputs_size': 88200,
@@ -38,11 +41,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -57,11 +63,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -76,11 +85,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -100,11 +112,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -119,11 +134,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -138,11 +156,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -162,11 +183,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -181,11 +205,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -200,11 +227,14 @@ def get_config():
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout': dropout,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
             'zoom': zoom,
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_decay': learning_rate_decay,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
