@@ -42,7 +42,6 @@ class SRNetwork(Network):
         self.num_layers = len(self.layers)
         self.activation_function = parameters['activation_function']
 
-
         self.feedforward_errors = {layer.name: [] for layer in self.layers}
         self.recurrent_errors = {layer.name: [] for layer in self.layers}
 
@@ -53,9 +52,26 @@ class SRNetwork(Network):
         self.feedforward_deltas = {layer.name: [] for layer in self.layers}
         self.recurrent_deltas = {layer.name: [] for layer in self.layers}
         self.feedback_deltas = {layer.name: [] for layer in self.layers}
+
         self.previous_prediction = None
+        self.previous_delta_backpropagate = None
 
     def run(self, inputs, learning_on=True):
+        self.feedforward_errors = {layer.name: [] for layer in self.layers}
+        self.recurrent_errors = {layer.name: [] for layer in self.layers}
+
+        self.feedforward_outputs = {layer.name: [] for layer in self.layers}
+        self.recurrent_outputs = {layer.name: [] for layer in self.layers}
+        self.feedback_outputs = {layer.name: [] for layer in self.layers}
+
+        self.feedforward_deltas = {layer.name: [] for layer in self.layers}
+        self.recurrent_deltas = {layer.name: [] for layer in self.layers}
+        self.feedback_deltas = {layer.name: [] for layer in self.layers}
+
+        self.backpropagate(self.previous_delta_backpropagate)
+        return self.feedforward_pass(inputs)
+
+    def run_old(self, inputs, learning_on=True):
 
         self.feedforward_errors = {layer.name: [] for layer in self.layers}
         self.recurrent_errors = {layer.name: [] for layer in self.layers}
@@ -171,9 +187,37 @@ class SRNetwork(Network):
 
         return prediction, output_mse
 
+    def backpropagate(self, delta_backpropagate):
+        if delta_backpropagate is not None:
+
+            # ###################### backpropagation on feedback and recurrent ######################
+
+            for ind_backprop, layer_backprop in enumerate(self.layers):
+                delta_backpropagate = layer_backprop.backpropagate_feedback(delta_backpropagate)
+                self.feedback_deltas[layer_backprop.name].append(delta_backpropagate)
+                if ind_backprop == self.num_layers - 1:
+                    delta_backpropagate = layer_backprop.backpropagate_recurrent(delta_backpropagate)
+                    self.recurrent_deltas[layer_backprop.name].append(delta_backpropagate)
+
+                    # ###################### backpropagation for feedforward ######################
+
+                    for ind_backprop_back, layer_backprop_back in enumerate(reversed(self.layers)):
+                        delta_backpropagate = layer_backprop_back.backpropagate_feedforward(delta_backpropagate)
+
+                        self.feedforward_deltas[layer_backprop_back.name].append(delta_backpropagate)
+                else:
+                    rec_delta = delta_backpropagate[0:layer_backprop.recurrent_node.output_size]
+                    back_delta = delta_backpropagate[layer_backprop.recurrent_node.output_size:]
+                    rec_delta_backpropagate = layer_backprop.backpropagate_recurrent(rec_delta)
+                    self.recurrent_deltas[layer_backprop.name].append(rec_delta_backpropagate)
+                    delta_backpropagate = back_delta
+
     def feedforward_pass(self, inputs):
         current_input = inputs
         current_activation = inputs
+        start_input = inputs
+        prediction = None
+        output_mse = None
         for ind, layer in enumerate(self.layers):
 
             # ###################### feedforward pass ######################
@@ -186,6 +230,35 @@ class SRNetwork(Network):
             self.recurrent_errors[layer.name].append(error)
             self.recurrent_outputs[layer.name].append(recurrent_output)
 
+            if ind == self.num_layers - 1:
+
+                # ###################### feedback pass ######################
+
+                for ind_back, layer_back in enumerate(reversed(self.layers)):
+                    if ind_back == 0:
+                        current_input, current_activation = layer_back.generate_feedback(recurrent_output, layer_back.recurrent_output_activations)
+                        self.feedback_outputs[layer_back.name].append(current_input)
+                    elif ind_back == self.num_layers - 1:
+                        prediction, current_activation = layer_back.generate_feedback(
+                            np.concatenate([layer_back.recurrent_output, current_input]), np.concatenate([layer_back.recurrent_output_activations, current_activation]))
+                        prediction = current_activation
+                        if self.previous_prediction is not None:
+                            output_error = self.previous_prediction - start_input
+                            output_mse = sqrt(np.mean(np.abs(output_error) ** 2, axis=0))
+                            self.logger.info('output error is {0}'.format(output_mse))
+                            delta_out = output_error * Utils.derivative(self.previous_prediction, self.activation_function)
+                            delta_backpropagate = delta_out
+                            self.previous_prediction = prediction
+                            self.previous_delta_backpropagate = delta_backpropagate
+                        else:
+                            self.previous_prediction = prediction
+                    else:
+                        current_input, current_activation = layer_back.generate_feedback(
+                            np.concatenate([layer_back.recurrent_output, current_input]),
+                            np.concatenate([layer_back.recurrent_output_activations, current_activation]))
+                        self.feedback_outputs[layer_back.name].append(current_input)
+
+        return prediction, output_mse
 
 
 class SRNetworkOld(Network):

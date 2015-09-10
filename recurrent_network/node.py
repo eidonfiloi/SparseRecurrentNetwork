@@ -210,7 +210,7 @@ class SRAutoEncoderNode(FeedForwardNode):
                     else:
                         self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] * (1.0 - self.learning_rate_decay)
 
-        delta_hidden = np.dot(self.weights, recon_delta) * Utils.derivative(target, self.activation_function)
+        delta_hidden = np.dot(self.weights.T, recon_delta) * Utils.derivative(hidden, self.activation_function)
 
         self.backpropagate(target, delta_hidden)
 

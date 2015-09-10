@@ -16,10 +16,11 @@ def get_config():
     max_w = 1.0
     lifetime_sparsity = 0.01
     duty_cycle_decay = 0.005
-    w_lr = 0.001
-    inh_lr = 0.001
-    b_lr = 0.001
-    r_b_lr = 0.001
+    w_lr = 0.05
+    inh_lr = 0.05
+    b_lr = 0.05
+    r_b_lr = 0.05
+    learning_rate_decay = None #0.01
     dropout_ratio = None
     zoom = 0.4
     make_sparse = False
@@ -27,7 +28,6 @@ def get_config():
     layer_repeat_factor = 3
     momentum = 0.5
     local_activation_radius = 0.2
-    learning_rate_decay = 0.05
 
     layer1 = {
         'name': "layer1",

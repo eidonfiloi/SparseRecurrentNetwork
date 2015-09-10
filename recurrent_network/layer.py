@@ -61,7 +61,6 @@ class SRLayer(Layer):
         if self.prev_recurrent_output is not None and self.feedforward_output is not None:
             error = self.recurrent_node.learn_reconstruction(self.feedforward_output, self.prev_recurrent_output)
         self.recurrent_output = self.recurrent_node.generate_node_output(inputs)
-        self.prev_recurrent_output = self.recurrent_output
         self.recurrent_output_activations = self.recurrent_node.activations
         if self.prev_recurrent_input is None:
             self.prev_recurrent_input = self.recurrent_input
@@ -84,6 +83,7 @@ class SRLayer(Layer):
         self.logger.info('{0}-recurrent mean delta: {1}'.format(self.name, np.mean(delta)))
         result = self.recurrent_node.backpropagate(self.prev_recurrent_input, delta)
         self.prev_recurrent_input = self.recurrent_input
+        self.prev_recurrent_output = self.recurrent_output
         return result
 
     def backpropagate_feedforward(self, delta):

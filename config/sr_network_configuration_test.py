@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 100
+        'epochs': 70
     }
 
     verbose = 1
@@ -16,10 +16,11 @@ def get_config():
     max_w = 1.0
     lifetime_sparsity = 0.014
     duty_cycle_decay = 0.006
-    w_lr = 0.005
-    inh_lr = 0.005
-    b_lr = 0.005
-    r_b_lr = 0.005
+    w_lr = 0.05
+    inh_lr = 0.05
+    b_lr = 0.05
+    r_b_lr = 0.05
+    learning_rate_decay = 0.01
     dropout_ratio = None
     momentum = 0.5
     zoom = 0.4
@@ -27,7 +28,6 @@ def get_config():
     target_sparsity = 0.1
     layer_repeat_factor = 10
     local_activation_radius = None
-    learning_rate_decay = 0.001
 
     layer1 = {
         'name': "layer1",
