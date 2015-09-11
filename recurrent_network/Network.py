@@ -68,8 +68,21 @@ class SRNetwork(Network):
         self.recurrent_deltas = {layer.name: [] for layer in self.layers}
         self.feedback_deltas = {layer.name: [] for layer in self.layers}
 
-        self.backpropagate(self.previous_delta_backpropagate)
-        return self.feedforward_pass(inputs)
+        prediction = self.feedforward_pass(inputs)
+        output_mse = None
+        if self.previous_prediction is not None:
+            output_error = self.previous_prediction - inputs
+            output_mse = sqrt(np.mean(np.abs(output_error) ** 2, axis=0))
+            self.logger.info('output error is {0}'.format(output_mse))
+            delta_backpropagate = output_error * Utils.derivative(self.previous_prediction, self.activation_function)
+            self.backpropagate(delta_backpropagate)
+        #self.visualize_hidden_states(self.feedforward_outputs, self.recurrent_outputs)
+
+        self.previous_prediction = copy(prediction)
+        for l in self.layers:
+                l.cleanup_layer()
+
+        return prediction, output_mse
 
     def run_old(self, inputs, learning_on=True):
 
@@ -187,6 +200,43 @@ class SRNetwork(Network):
 
         return prediction, output_mse
 
+    def feedforward_pass(self, inputs):
+        current_input = inputs
+        current_activation = inputs
+        prediction = None
+
+        for ind, layer in enumerate(self.layers):
+
+            # ###################### feedforward pass ######################
+            current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation)
+
+            self.feedforward_errors[layer.name].append(error)
+            self.feedforward_outputs[layer.name].append(current_input)
+
+            recurrent_output, error = layer.generate_recurrent(current_input, current_activation)
+            self.recurrent_errors[layer.name].append(error)
+            self.recurrent_outputs[layer.name].append(recurrent_output)
+
+            if ind == self.num_layers - 1:
+
+                # ###################### feedback pass ######################
+
+                for ind_back, layer_back in enumerate(reversed(self.layers)):
+                    if ind_back == 0:
+                        current_input, current_activation = layer_back.generate_feedback(layer_back.recurrent_output, layer_back.recurrent_output_activations)
+                        self.feedback_outputs[layer_back.name].append(current_input)
+                    elif ind_back == self.num_layers - 1:
+                        prediction, current_activation = layer_back.generate_feedback(
+                            np.concatenate([layer_back.recurrent_output, current_input]), np.concatenate([layer_back.recurrent_output_activations, current_activation]))
+                        prediction = current_activation
+                    else:
+                        current_input, current_activation = layer_back.generate_feedback(
+                            np.concatenate([layer_back.recurrent_output, current_input]),
+                            np.concatenate([layer_back.recurrent_output_activations, current_activation]))
+                        self.feedback_outputs[layer_back.name].append(current_input)
+
+        return prediction
+
     def backpropagate(self, delta_backpropagate):
         if delta_backpropagate is not None:
 
@@ -212,53 +262,34 @@ class SRNetwork(Network):
                     self.recurrent_deltas[layer_backprop.name].append(rec_delta_backpropagate)
                     delta_backpropagate = back_delta
 
-    def feedforward_pass(self, inputs):
-        current_input = inputs
-        current_activation = inputs
-        start_input = inputs
-        prediction = None
-        output_mse = None
-        for ind, layer in enumerate(self.layers):
+    def visualize_hidden_states(self, feedforward_sdrs, recurrent_sdrs):
+        plt.ion()
+        for ind, k in enumerate(sorted(feedforward_sdrs)):
+            v = feedforward_sdrs[k]
+            if len(v) > 0:
+                reshape_size = round(sqrt(v[0].shape[0]))
+                ax0 = plt.subplot(self.num_layers, 3, 3*ind + 1)
+                ax0.axis([1, reshape_size, 1, reshape_size])
+                x, y = np.argwhere(v[0].reshape(reshape_size, reshape_size) == 1).T
+                ax0.scatter(x, y, alpha=0.5, c='b', marker='s')
+                ax0.set_title('forward: {0}'.format(ind + 1))
+                ax0.set_xticks([])
+                ax0.set_yticks([])
 
-            # ###################### feedforward pass ######################
-            current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation)
-
-            self.feedforward_errors[layer.name].append(error)
-            self.feedforward_outputs[layer.name].append(current_input)
-
-            recurrent_output, error = layer.generate_recurrent(current_input, current_activation)
-            self.recurrent_errors[layer.name].append(error)
-            self.recurrent_outputs[layer.name].append(recurrent_output)
-
-            if ind == self.num_layers - 1:
-
-                # ###################### feedback pass ######################
-
-                for ind_back, layer_back in enumerate(reversed(self.layers)):
-                    if ind_back == 0:
-                        current_input, current_activation = layer_back.generate_feedback(recurrent_output, layer_back.recurrent_output_activations)
-                        self.feedback_outputs[layer_back.name].append(current_input)
-                    elif ind_back == self.num_layers - 1:
-                        prediction, current_activation = layer_back.generate_feedback(
-                            np.concatenate([layer_back.recurrent_output, current_input]), np.concatenate([layer_back.recurrent_output_activations, current_activation]))
-                        prediction = current_activation
-                        if self.previous_prediction is not None:
-                            output_error = self.previous_prediction - start_input
-                            output_mse = sqrt(np.mean(np.abs(output_error) ** 2, axis=0))
-                            self.logger.info('output error is {0}'.format(output_mse))
-                            delta_out = output_error * Utils.derivative(self.previous_prediction, self.activation_function)
-                            delta_backpropagate = delta_out
-                            self.previous_prediction = prediction
-                            self.previous_delta_backpropagate = delta_backpropagate
-                        else:
-                            self.previous_prediction = prediction
-                    else:
-                        current_input, current_activation = layer_back.generate_feedback(
-                            np.concatenate([layer_back.recurrent_output, current_input]),
-                            np.concatenate([layer_back.recurrent_output_activations, current_activation]))
-                        self.feedback_outputs[layer_back.name].append(current_input)
-
-        return prediction, output_mse
+        for ind, k in enumerate(sorted(recurrent_sdrs)):
+            v = recurrent_sdrs[k]
+            if len(v) > 0:
+                reshape_size = round(sqrt(v[0].shape[0]))
+                ax1 = plt.subplot(self.num_layers, 3, 3*ind + 2)
+                ax1.axis([1, reshape_size, 1, reshape_size])
+                x, y = np.argwhere(v[0].reshape(reshape_size, reshape_size) == 1).T
+                ax1.scatter(x, y, alpha=0.5, c='r', marker='s')
+                ax1.set_title('recurrent: {0}'.format(ind + 1))
+                ax1.set_xticks([])
+                ax1.set_yticks([])
+        plt.draw()
+        time.sleep(0.05)
+        plt.clf()
 
 
 class SRNetworkOld(Network):

@@ -3,6 +3,7 @@ __author__ = 'ptoth'
 from Node import *
 import logging
 import abc
+from copy import copy
 
 
 class Layer(object):
@@ -32,17 +33,22 @@ class SRLayer(Layer):
 
         self.repeat_factor = parameters['repeat_factor']
 
+        self.feedforward_input = None
         self.feedforward_output = None
         self.feedforward_output_activations = None
-        self.feedforward_input = None
+        self.prev_feedforward_input = None
+        self.prev_feedforward_output = None
+
+        self.recurrent_input = None
         self.recurrent_output = None
         self.recurrent_output_activations = None
-        self.recurrent_input = None
         self.prev_recurrent_input = None
         self.prev_recurrent_output = None
-        self.prev_feedback_input = None
-        self.feedback_output = None
+
         self.feedback_input = None
+        self.feedback_output = None
+        self.prev_feedback_input = None
+        self.prev_feedback_output = None
 
     def generate_feedforward(self, inputs, activations):
         self.feedforward_input = activations
@@ -58,37 +64,42 @@ class SRLayer(Layer):
     def generate_recurrent(self, inputs, activations):
         self.recurrent_input = activations
         error = None
-        if self.prev_recurrent_output is not None and self.feedforward_output is not None:
-            error = self.recurrent_node.learn_reconstruction(self.feedforward_output, self.prev_recurrent_output)
         self.recurrent_output = self.recurrent_node.generate_node_output(inputs)
+        if self.prev_recurrent_output is not None and self.feedforward_output is not None and self.prev_recurrent_input is not None:
+            error = self.recurrent_node.learn_reconstruction(inputs, self.prev_recurrent_output, self.prev_recurrent_input)
         self.recurrent_output_activations = self.recurrent_node.activations
-        if self.prev_recurrent_input is None:
-            self.prev_recurrent_input = self.recurrent_input
         return self.recurrent_output, error
 
     def generate_feedback(self, inputs, activations):
         self.feedback_input = activations
         self.feedback_output = self.feedback_node.generate_node_output(inputs)
-        if self.prev_feedback_input is None:
-            self.prev_feedback_input = self.feedback_input
         return self.feedback_output, self.feedback_node.activations
 
     def backpropagate_feedback(self, delta):
         self.logger.info('{0}-feedback mean delta: {1}'.format(self.name, np.mean(delta)))
         result = self.feedback_node.backpropagate(self.prev_feedback_input, delta)
-        self.prev_feedback_input = self.feedback_input
         return result
 
     def backpropagate_recurrent(self, delta):
         self.logger.info('{0}-recurrent mean delta: {1}'.format(self.name, np.mean(delta)))
         result = self.recurrent_node.backpropagate(self.prev_recurrent_input, delta)
-        self.prev_recurrent_input = self.recurrent_input
-        self.prev_recurrent_output = self.recurrent_output
         return result
 
     def backpropagate_feedforward(self, delta):
         self.logger.info('{0}-feedforward mean delta: {1}'.format(self.name, np.mean(delta)))
-        return self.feedforward_node.backpropagate(self.feedforward_input, delta)
+        result_delta = self.feedforward_node.backpropagate(self.prev_feedforward_input, delta)
+        return result_delta
+
+    def cleanup_layer(self):
+
+        self.prev_feedforward_input = copy(self.feedforward_input)
+        self.prev_feedforward_output = copy(self.feedforward_output)
+
+        self.prev_recurrent_input = copy(self.recurrent_input)
+        self.prev_recurrent_output = copy(self.recurrent_output)
+
+        self.prev_feedback_input = copy(self.feedback_input)
+        self.prev_feedback_output = copy(self.feedback_output)
 
 
 class SRLayerOld(Layer):

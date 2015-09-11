@@ -30,6 +30,8 @@ if __name__ == "__main__":
     network = SRNetwork(config['network'])
 
     input_sample = X_train_freq[2]
+    max_value = np.max(input_sample)
+    input_sample /= max_value
     input_sample_y = y_train_freq[2]
 
     epochs = config['global']['epochs']
@@ -62,7 +64,7 @@ if __name__ == "__main__":
                 if len(v) > 0:
                     recurrent_errors[key].append(v[0])
             _LOGGER.info('output length {0}\n{1}'.format(len(network_output), network_output[0:20]))
-            output.append(network_output)
+            output.append(network_output * max_value)
 
     for i in xrange(len(output)):
         output[i] *= X_var_freq

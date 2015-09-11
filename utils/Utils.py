@@ -24,4 +24,4 @@ class Utils(object):
         elif activation_function == "Tanh":
             return Utils.tanh_derivative(x)
         else:
-            return Utils.sigmoid_derivative(x)
+            return 1.0

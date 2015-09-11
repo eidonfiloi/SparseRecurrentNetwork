@@ -52,7 +52,7 @@ class SRNetworkTest(unittest.TestCase):
 
         input_series = long_sequence #simple_sequence #long_sequence #constant
 
-        sd_input_series = preprocessing.scale(input_series)
+        sd_input_series = input_series #preprocessing.scale(input_series)
 
         feedforward_errors = {layer['name']: [] for layer in config['network']['layers']}
         recurrent_errors = {layer['name']: [] for layer in config['network']['layers']}

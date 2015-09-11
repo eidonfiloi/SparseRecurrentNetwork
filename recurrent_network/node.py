@@ -115,7 +115,7 @@ class FeedForwardNode(Node):
         elif self.activation_function == "Tanh":
             self.activations = np.tanh(sums)
         else:
-            self.activations = expit(sums)
+            self.activations = sums
 
         output = self.activations
         if self.make_sparse:
@@ -142,13 +142,26 @@ class FeedForwardNode(Node):
                 self.weights[i] -= self.velocity[i]
             else:
                 self.weights[i] -= self.weights_lr * inputs[i] * (self.local_gain[i] * delta_)
+
             self.biases -= self.bias_lr * delta_
-            if self.learning_rate_decay is not None:
-                for j in range(self.local_gain[i].size):
-                    if (self.prev_local_gain[i][j] * self.local_gain[i][j]) > 0.0:
-                        self.local_gain[i][j] = self.prev_local_gain[i][j] + self.learning_rate_decay
-                    else:
-                        self.local_gain[i][j] = self.prev_local_gain[i][j] * (1.0 - self.learning_rate_decay)
+
+            # if self.learning_rate_decay is not None:
+            #     for j in range(self.local_gain[i].size):
+            #         if (self.prev_local_gain[i][j] * self.local_gain[i][j]) > 0.0:
+            #             self.local_gain[i][j] = self.prev_local_gain[i][j] + self.learning_rate_decay
+            #         else:
+            #             self.local_gain[i][j] = self.prev_local_gain[i][j] * (1.0 - self.learning_rate_decay)
+
+        if self.learning_rate_decay is not None:
+            gradient_change = (np.multiply(self.prev_local_gain, self.local_gain) > 0.0).astype('int')
+
+            gain_increase = np.multiply(gradient_change, self.prev_local_gain + self.learning_rate_decay * np.ones(self.prev_local_gain.shape))
+
+            gradient_change = (np.multiply(self.prev_local_gain, self.local_gain) <= 0.0).astype('int')
+
+            gain_decrease = np.multiply(gradient_change, self.prev_local_gain * (1.0 - self.learning_rate_decay))
+
+            self.local_gain = gain_increase + gain_decrease
 
         return delta_backpropagate
 
@@ -176,7 +189,7 @@ class SRAutoEncoderNode(FeedForwardNode):
         elif self.activation_function == "Tanh":
             self.activations = np.tanh(sums)
         else:
-            self.activations = expit(sums)
+            self.activations = sums
 
         output = self.activations
         if self.make_sparse:
@@ -189,11 +202,17 @@ class SRAutoEncoderNode(FeedForwardNode):
 
         return output
 
-    def learn_reconstruction(self, target, hidden):
+    def learn_reconstruction(self, output_target, hidden, input_target=None):
 
         recon = self.reconstruct(hidden)
+        if self.name == "layer1-recurrent":
+            self.logger.info('################# recurrent\n'
+                             'out_target:\n'
+                             '{0}\n'
+                             'hidden:\n'
+                             '{1}'.format(output_target, hidden))
 
-        error_diff = recon - target
+        error_diff = recon - output_target
 
         mse = sqrt(np.mean(np.abs(error_diff) ** 2, axis=0))
         self.logger.info('{0}: error is {1}'.format(self.name, mse))
@@ -203,17 +222,30 @@ class SRAutoEncoderNode(FeedForwardNode):
         for i in range(0, self.weights.T.shape[0]):
             self.weights.T[i] -= self.weights_lr * hidden[i] * (recon_delta * self.local_gain.T[i])
             self.recon_biases -= self.recon_bias_lr * recon_delta
-            if self.learning_rate_decay is not None:
-                for j in range(self.local_gain.T[i].size):
-                    if (self.prev_local_gain.T[i][j] * self.local_gain.T[i][j]) > 0.0:
-                        self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] + self.learning_rate_decay
-                    else:
-                        self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] * (1.0 - self.learning_rate_decay)
+            # if self.learning_rate_decay is not None:
+            #     for j in range(self.local_gain.T[i].size):
+            #         if (self.prev_local_gain.T[i][j] * self.local_gain.T[i][j]) > 0.0:
+            #             self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] + self.learning_rate_decay
+            #         else:
+            #             self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] * (1.0 - self.learning_rate_decay)
+
+        if self.learning_rate_decay is not None:
+            gradient_change = (np.multiply(self.prev_local_gain.T, self.local_gain.T) > 0.0).astype('int')
+
+            gain_increase = np.multiply(gradient_change, self.prev_local_gain.T + self.learning_rate_decay * np.ones(self.prev_local_gain.T.shape))
+
+            gradient_change = (np.multiply(self.prev_local_gain.T, self.local_gain.T) <= 0.0).astype('int')
+
+            gain_decrease = np.multiply(gradient_change, self.prev_local_gain.T * (1.0 - self.learning_rate_decay))
+
+            self.local_gain = (gain_increase + gain_decrease).T
 
         delta_hidden = np.dot(self.weights.T, recon_delta) * Utils.derivative(hidden, self.activation_function)
 
-        self.backpropagate(target, delta_hidden)
-
+        if input_target is not None:
+            self.backpropagate(input_target, delta_hidden)
+        else:
+            self.backpropagate(output_target, delta_hidden)
         if self.make_sparse:
             lifetime_sparsity_correction_factor = (np.array([self.lifetime_sparsity
                                                              in range(0, len(self.duty_cycles))]) - self.duty_cycles)
@@ -234,7 +266,7 @@ class SRAutoEncoderNode(FeedForwardNode):
         elif self.activation_function == "Tanh":
             return np.tanh(reconstruct_activation)
         else:
-            return expit(reconstruct_activation)
+            return reconstruct_activation
 
 
 class SRAutoEncoderOld(Node):
