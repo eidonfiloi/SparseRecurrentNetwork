@@ -246,7 +246,7 @@ def get_config():
         'name': "Bach network",
         'verbose': verbose,
         'activation_function': "Sigmoid",
-        'visualize_grid_size': 32,
+        'visualize_states': True,
         'input': {
 
         },

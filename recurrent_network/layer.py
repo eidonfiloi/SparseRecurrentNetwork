@@ -42,8 +42,9 @@ class SRLayer(Layer):
         self.recurrent_input = None
         self.recurrent_output = None
         self.recurrent_output_activations = None
-        self.prev_recurrent_input = None
-        self.prev_recurrent_output = None
+        self.prev_recurrent_input = np.random.rand(self.feedforward_node.activations.size)
+        self.prev_recurrent_output = np.random.rand(self.recurrent_node.activations.size)
+        self.prev_recurrent_output_activations = np.random.rand(self.recurrent_node.activations.size)
 
         self.feedback_input = None
         self.feedback_output = None
@@ -92,14 +93,15 @@ class SRLayer(Layer):
 
     def cleanup_layer(self):
 
-        self.prev_feedforward_input = copy(self.feedforward_input)
-        self.prev_feedforward_output = copy(self.feedforward_output)
+        self.prev_feedforward_input = deepcopy(self.feedforward_input)
+        self.prev_feedforward_output = deepcopy(self.feedforward_output)
 
-        self.prev_recurrent_input = copy(self.recurrent_input)
-        self.prev_recurrent_output = copy(self.recurrent_output)
+        self.prev_recurrent_output = deepcopy(self.recurrent_output)
+        self.prev_recurrent_output_activations = deepcopy(self.recurrent_output_activations)
+        self.prev_recurrent_input = deepcopy(self.recurrent_input)
 
-        self.prev_feedback_input = copy(self.feedback_input)
-        self.prev_feedback_output = copy(self.feedback_output)
+        self.prev_feedback_input = deepcopy(self.feedback_input)
+        self.prev_feedback_output = deepcopy(self.feedback_output)
 
 
 class SRLayerOld(Layer):

@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 70
+        'epochs': 30
     }
 
     verbose = 1
@@ -22,7 +22,7 @@ def get_config():
     r_b_lr = 0.05
     learning_rate_decay = 0.01
     dropout_ratio = None
-    momentum = 0.5
+    momentum = 0.9
     zoom = 0.4
     make_sparse = False
     target_sparsity = 0.1
@@ -105,7 +105,7 @@ def get_config():
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer2-feedforward",
-            'inputs_size': 16,
+            'inputs_size': 32,
             'output_size': 16,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -175,7 +175,7 @@ def get_config():
         'name': "tst network",
         'verbose': verbose,
         'activation_function': "Sigmoid",
-        'visualize_grid_size': 32,
+        'visualize_states': False,
         'input': {
 
         },
