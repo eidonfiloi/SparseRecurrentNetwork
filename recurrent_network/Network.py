@@ -76,7 +76,7 @@ class SRNetwork(Network):
             self.logger.info('output error is {0}'.format(output_mse))
             delta_backpropagate = output_error * Utils.derivative(self.previous_prediction, self.activation_function)
             self.backpropagate(delta_backpropagate)
-        #self.visualize_hidden_states(self.feedforward_outputs, self.recurrent_outputs)
+        self.visualize_hidden_states(self.feedforward_outputs, self.recurrent_outputs)
 
         self.previous_prediction = copy(prediction)
         for l in self.layers:
@@ -208,8 +208,8 @@ class SRNetwork(Network):
         for ind, layer in enumerate(self.layers):
 
             # ###################### feedforward pass ######################
-            current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation)
 
+            current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation)
             self.feedforward_errors[layer.name].append(error)
             self.feedforward_outputs[layer.name].append(current_input)
 
@@ -270,7 +270,7 @@ class SRNetwork(Network):
                 reshape_size = round(sqrt(v[0].shape[0]))
                 ax0 = plt.subplot(self.num_layers, 3, 3*ind + 1)
                 ax0.axis([1, reshape_size, 1, reshape_size])
-                x, y = np.argwhere(v[0].reshape(reshape_size, reshape_size) == 1).T
+                x, y = np.argwhere(v[0].reshape(reshape_size, reshape_size) > 0.5).T
                 ax0.scatter(x, y, alpha=0.5, c='b', marker='s')
                 ax0.set_title('forward: {0}'.format(ind + 1))
                 ax0.set_xticks([])
@@ -282,7 +282,7 @@ class SRNetwork(Network):
                 reshape_size = round(sqrt(v[0].shape[0]))
                 ax1 = plt.subplot(self.num_layers, 3, 3*ind + 2)
                 ax1.axis([1, reshape_size, 1, reshape_size])
-                x, y = np.argwhere(v[0].reshape(reshape_size, reshape_size) == 1).T
+                x, y = np.argwhere(v[0].reshape(reshape_size, reshape_size) > 0.5).T
                 ax1.scatter(x, y, alpha=0.5, c='r', marker='s')
                 ax1.set_title('recurrent: {0}'.format(ind + 1))
                 ax1.set_xticks([])

@@ -10,8 +10,8 @@ def get_config():
     }
 
     verbose = 1
-    activation_function = "Tanh"
-    activation_threshold = 0.0
+    activation_function = "Sigmoid"
+    activation_threshold = 0.5
     min_w = -1.0
     max_w = 1.0
     lifetime_sparsity = 0.014
@@ -34,7 +34,7 @@ def get_config():
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer1-feedforward",
-            'inputs_size': 88200,
+            'inputs_size': 22050,
             'output_size': 1024,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -79,7 +79,7 @@ def get_config():
         'feedback': {
             'name': "layer1-feedback",
             'inputs_size': 768,
-            'output_size': 88200,
+            'output_size': 22050,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,

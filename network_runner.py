@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
      # Load up the training data
     _LOGGER.info('Loading training data')
-    input_file = 'data_prepared/test_bach26_freq'
+    input_file = 'data_prepared/test_bach26_freq4'
     # X_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
     X_train_freq = np.load(input_file + '_x.npy')
     # y_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
@@ -32,6 +32,7 @@ if __name__ == "__main__":
     input_sample = X_train_freq[2]
     max_value = np.max(input_sample)
     input_sample /= max_value
+    input_sample = (input_sample + 1.0) / 2.0
     input_sample_y = y_train_freq[2]
 
     epochs = config['global']['epochs']
@@ -64,6 +65,7 @@ if __name__ == "__main__":
                 if len(v) > 0:
                     recurrent_errors[key].append(v[0])
             _LOGGER.info('output length {0}\n{1}'.format(len(network_output), network_output[0:20]))
+            network_output = 2.0*network_output - 1.0
             output.append(network_output * max_value)
 
     for i in xrange(len(output)):

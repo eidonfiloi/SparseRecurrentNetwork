@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 30
+        'epochs': 70
     }
 
     verbose = 1

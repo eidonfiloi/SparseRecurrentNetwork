@@ -205,12 +205,12 @@ class SRAutoEncoderNode(FeedForwardNode):
     def learn_reconstruction(self, output_target, hidden, input_target=None):
 
         recon = self.reconstruct(hidden)
-        if self.name == "layer1-recurrent":
-            self.logger.info('################# recurrent\n'
-                             'out_target:\n'
-                             '{0}\n'
-                             'hidden:\n'
-                             '{1}'.format(output_target, hidden))
+        # if self.name == "layer1-recurrent":
+        #     self.logger.info('################# recurrent\n'
+        #                      'out_target:\n'
+        #                      '{0}\n'
+        #                      'hidden:\n'
+        #                      '{1}'.format(output_target, hidden))
 
         error_diff = recon - output_target
 
