@@ -255,6 +255,7 @@ def get_config():
     params['network'] = {
         'name': "Bach network",
         'verbose': verbose,
+        'serialize': False,
         'activation_function': "Sigmoid",
         'visualize_states': False,
         'input': {

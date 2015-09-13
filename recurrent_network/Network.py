@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import time
 from math import sqrt
 from utils.Utils import *
+import pickle
 
 
 class Network(object):
@@ -18,8 +19,11 @@ class Network(object):
 
     def __init__(self, parameters):
         self.logger = logging.getLogger(self.__class__.__name__)
-        
+
         self.name = parameters['name']
+        self.layers = [Layer(layer_conf) for layer_conf in parameters['layers']]
+        self.num_layers = len(self.layers)
+        self.activation_function = parameters['activation_function']
         self.verbose = parameters['verbose']
         self.visualize_states = parameters['visualize_states']
 
@@ -31,6 +35,10 @@ class Network(object):
         :return:
         """
 
+    def serialize(self, path):
+        with open(path, 'wb') as f:
+            pickle.dump(self, f)
+
 
 class SRNetwork(Network):
 
@@ -40,8 +48,6 @@ class SRNetwork(Network):
         super(SRNetwork, self).__init__(parameters)
 
         self.layers = [SRLayer(layer_conf) for layer_conf in parameters['layers']]
-        self.num_layers = len(self.layers)
-        self.activation_function = parameters['activation_function']
 
         self.feedforward_errors = {layer.name: [] for layer in self.layers}
         self.recurrent_errors = {layer.name: [] for layer in self.layers}
