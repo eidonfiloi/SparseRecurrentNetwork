@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 5
+        'epochs': 30
     }
 
     verbose = 1
@@ -16,11 +16,11 @@ def get_config():
     max_w = 1.0
     lifetime_sparsity = 0.014
     duty_cycle_decay = 0.006
-    w_lr = 0.05
-    inh_lr = 0.05
-    b_lr = 0.05
-    r_b_lr = 0.05
-    learning_rate_decay = 0.01
+    w_lr = 0.01
+    inh_lr = 0.01
+    b_lr = 0.01
+    r_b_lr = 0.01
+    learning_rate_decay = 0.005
     dropout_ratio = None
     zoom = 0.4
     make_sparse = False
@@ -28,13 +28,14 @@ def get_config():
     layer_repeat_factor = None
     momentum = 0.5
     local_activation_radius = 0.2
+    is_transpose_reconstruction = True
 
     layer1 = {
         'name': "layer1",
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer1-feedforward",
-            'inputs_size': 22050,
+            'inputs_size': 8820,
             'output_size': 1024,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -49,6 +50,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -71,6 +73,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': False,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -79,7 +82,7 @@ def get_config():
         'feedback': {
             'name': "layer1-feedback",
             'inputs_size': 768,
-            'output_size': 22050,
+            'output_size': 8820,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -93,6 +96,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -105,7 +109,7 @@ def get_config():
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer2-feedforward",
-            'inputs_size': 1024,
+            'inputs_size': 1280,
             'output_size': 256,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -120,6 +124,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -142,6 +147,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': False,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -164,6 +170,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -176,7 +183,7 @@ def get_config():
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer3-feedforward",
-            'inputs_size': 256,
+            'inputs_size': 512,
             'output_size': 256,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -191,6 +198,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -213,6 +221,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': False,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -235,6 +244,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -246,7 +256,7 @@ def get_config():
         'name': "Bach network",
         'verbose': verbose,
         'activation_function': "Sigmoid",
-        'visualize_states': True,
+        'visualize_states': False,
         'input': {
 
         },

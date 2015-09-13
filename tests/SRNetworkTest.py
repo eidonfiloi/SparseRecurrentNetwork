@@ -50,12 +50,13 @@ class SRNetworkTest(unittest.TestCase):
             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
         ])
 
-        input_series = simple_sequence #simple_sequence #long_sequence #constant
+        input_series = long_sequence #simple_sequence #long_sequence #constant
 
         sd_input_series = input_series #preprocessing.scale(input_series)
 
         feedforward_errors = {layer['name']: [] for layer in config['network']['layers']}
         recurrent_errors = {layer['name']: [] for layer in config['network']['layers']}
+        feedback_errors = {layer['name']: [] for layer in config['network']['layers']}
         output_mse = []
 
         prev_output = None
@@ -100,9 +101,12 @@ class SRNetworkTest(unittest.TestCase):
                 for key, v in network.recurrent_errors.items():
                     if len(v) > 0:
                         recurrent_errors[key].append(v[0])
+                for key, v in network.feedback_errors.items():
+                    if len(v) > 0:
+                        feedback_errors[key].append(v[0])
 
         plt.ioff()
-        plt.subplot(3, 1, 1)
+        plt.subplot(4, 1, 1)
         for k, v in feedforward_errors.items():
             if len(v) > 0:
                 plt.plot(range(len(v)), v, label=k)
@@ -111,7 +115,7 @@ class SRNetworkTest(unittest.TestCase):
         # plt.title('feedforward_errors')
         plt.legend(loc=1)
 
-        plt.subplot(3, 1, 2)
+        plt.subplot(4, 1, 2)
         for k, v in recurrent_errors.items():
             if len(v) > 0:
                 plt.plot(range(len(v)), v, label=k)
@@ -120,7 +124,16 @@ class SRNetworkTest(unittest.TestCase):
         # plt.title('recurrent_errors')
         plt.legend(loc=1)
 
-        plt.subplot(3, 1, 3)
+        plt.subplot(4, 1, 3)
+        for k, v in feedback_errors.items():
+            if len(v) > 0:
+                plt.plot(range(len(v)), v, label=k)
+        plt.xlabel('epochs')
+        plt.ylabel('feedback_errors')
+        # plt.title('recurrent_errors')
+        plt.legend(loc=1)
+
+        plt.subplot(4, 1, 4)
         plt.plot(range(len(output_mse)), output_mse, label="mse")
         plt.xlabel('epochs')
         plt.ylabel('output_mse')

@@ -46,6 +46,7 @@ if __name__ == "__main__":
     current_j = 0
     prev_j = -1
     prev_output = None
+    network_output = None
     for j in range(epochs):
         for i in range(input_sample.shape[0]):
             #for k in range(X_train.shape[0]):
@@ -106,6 +107,17 @@ if __name__ == "__main__":
         output[i] *= X_var_freq
         output[i] += X_mean_freq
     save_generated_example("bach_output.wav", output, useTimeDomain=False)
+
+    output_gen = []
+    inp_gen = (network_output + 1.0) / 2.0
+    for i in range(50):
+        inp_gen, mse = network.run(inp_gen, False)
+        output_gen.append((2.0*inp_gen - 1.0)*max_value)
+
+    for i in xrange(len(output_gen)):
+        output_gen[i] *= X_var_freq
+        output_gen[i] += X_mean_freq
+    save_generated_example("bach_output_gen.wav", output_gen, useTimeDomain=False)
 
     plt.ioff()
     plt.subplot(4, 1, 1)

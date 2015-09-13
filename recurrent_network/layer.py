@@ -28,7 +28,7 @@ class SRLayer(Layer):
             else None
         self.recurrent_node = SRAutoEncoderNode(parameters['recurrent']) if parameters['recurrent'] is not None \
             else None
-        self.feedback_node = FeedForwardNode(parameters['feedback']) if parameters['feedback'] is not None \
+        self.feedback_node = SRAutoEncoderNode(parameters['feedback']) if parameters['feedback'] is not None \
             else None
 
         self.repeat_factor = parameters['repeat_factor']
@@ -67,14 +67,15 @@ class SRLayer(Layer):
         error = None
         self.recurrent_output = self.recurrent_node.generate_node_output(inputs)
         if self.prev_recurrent_output is not None and self.feedforward_output is not None and self.prev_recurrent_input is not None:
-            error = self.recurrent_node.learn_reconstruction(inputs, self.prev_recurrent_output, self.prev_recurrent_input)
+            error = self.recurrent_node.learn_reconstruction(inputs, self.prev_recurrent_output, self.prev_recurrent_input, False)
         self.recurrent_output_activations = self.recurrent_node.activations
         return self.recurrent_output, error
 
     def generate_feedback(self, inputs, activations):
         self.feedback_input = activations
         self.feedback_output = self.feedback_node.generate_node_output(inputs)
-        return self.feedback_output, self.feedback_node.activations
+        error = self.feedback_node.learn_reconstruction(inputs, self.feedback_output)
+        return self.feedback_output, self.feedback_node.activations, error
 
     def backpropagate_feedback(self, delta):
         self.logger.info('{0}-feedback mean delta: {1}'.format(self.name, np.mean(delta)))

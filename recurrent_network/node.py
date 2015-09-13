@@ -178,6 +178,13 @@ class SRAutoEncoderNode(FeedForwardNode):
 
         self.recon_bias_lr = parameters['recon_bias_lr']
         self.recon_biases = np.random.rand(self.inputs_size) * (self.max_weight - self.min_weight) + self.min_weight
+        self.is_transpose_reconstruction = parameters['is_transpose_reconstruction']
+        self.output_weights = self.weights.T if self.is_transpose_reconstruction \
+            else np.random.rand(self.output_size, self.inputs_size) * (self.max_weight - self.min_weight) + self.min_weight
+        self.output_local_gain = self.local_gain.T if self.is_transpose_reconstruction \
+            else np.ones((self.output_size, self.inputs_size))
+        self.prev_output_local_gain = self.prev_local_gain.T if self.is_transpose_reconstruction \
+            else np.ones((self.output_size, self.inputs_size))
 
     def generate_node_output(self, inputs):
         sums = np.dot(inputs.T, self.weights).T + self.biases
@@ -202,7 +209,7 @@ class SRAutoEncoderNode(FeedForwardNode):
 
         return output
 
-    def learn_reconstruction(self, output_target, hidden, input_target=None):
+    def learn_reconstruction(self, output_target, hidden, input_target=None, backpropagate_hidden=True):
 
         recon = self.reconstruct(hidden)
         # if self.name == "layer1-recurrent":
@@ -219,33 +226,29 @@ class SRAutoEncoderNode(FeedForwardNode):
 
         recon_delta = error_diff * Utils.derivative(recon, self.activation_function)
 
-        for i in range(0, self.weights.T.shape[0]):
-            self.weights.T[i] -= self.weights_lr * hidden[i] * (recon_delta * self.local_gain.T[i])
+        for i in range(0, self.output_weights.shape[0]):
+            self.output_weights[i] -= self.weights_lr * hidden[i] * (recon_delta * self.output_local_gain[i])
             self.recon_biases -= self.recon_bias_lr * recon_delta
-            # if self.learning_rate_decay is not None:
-            #     for j in range(self.local_gain.T[i].size):
-            #         if (self.prev_local_gain.T[i][j] * self.local_gain.T[i][j]) > 0.0:
-            #             self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] + self.learning_rate_decay
-            #         else:
-            #             self.local_gain.T[i][j] = self.prev_local_gain.T[i][j] * (1.0 - self.learning_rate_decay)
 
         if self.learning_rate_decay is not None:
-            gradient_change = (np.multiply(self.prev_local_gain.T, self.local_gain.T) > 0.0).astype('int')
+            gradient_change = (np.multiply(self.prev_output_local_gain, self.output_local_gain) > 0.0).astype('int')
 
-            gain_increase = np.multiply(gradient_change, self.prev_local_gain.T + self.learning_rate_decay * np.ones(self.prev_local_gain.T.shape))
+            gain_increase = np.multiply(gradient_change, self.prev_output_local_gain + self.learning_rate_decay * np.ones(self.prev_output_local_gain.shape))
 
-            gradient_change = (np.multiply(self.prev_local_gain.T, self.local_gain.T) <= 0.0).astype('int')
+            gradient_change = (np.multiply(self.prev_output_local_gain, self.output_local_gain) <= 0.0).astype('int')
 
-            gain_decrease = np.multiply(gradient_change, self.prev_local_gain.T * (1.0 - self.learning_rate_decay))
+            gain_decrease = np.multiply(gradient_change, self.prev_output_local_gain * (1.0 - self.learning_rate_decay))
 
             self.local_gain = (gain_increase + gain_decrease).T
 
-        delta_hidden = np.dot(self.weights.T, recon_delta) * Utils.derivative(hidden, self.activation_function)
+        if backpropagate_hidden:
+            delta_hidden = np.dot(self.weights.T, recon_delta) * Utils.derivative(hidden, self.activation_function)
 
-        if input_target is not None:
-            self.backpropagate(input_target, delta_hidden)
-        else:
-            self.backpropagate(output_target, delta_hidden)
+            if input_target is not None:
+                self.backpropagate(input_target, delta_hidden)
+            else:
+                self.backpropagate(output_target, delta_hidden)
+
         if self.make_sparse:
             lifetime_sparsity_correction_factor = (np.array([self.lifetime_sparsity
                                                              in range(0, len(self.duty_cycles))]) - self.duty_cycles)
@@ -258,7 +261,7 @@ class SRAutoEncoderNode(FeedForwardNode):
         return mse
 
     def reconstruct(self, hidden):
-        reconstruct_activation = np.dot(hidden.T, self.weights.T).T + self.recon_biases
+        reconstruct_activation = np.dot(hidden.T, self.output_weights).T + self.recon_biases
         if self.activation_function == "Sigmoid":
             return expit(reconstruct_activation)
         elif self.activation_function == "Rectifier":

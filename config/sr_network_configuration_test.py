@@ -22,12 +22,13 @@ def get_config():
     r_b_lr = 0.05
     learning_rate_decay = 0.01
     dropout_ratio = None
-    momentum = 0.9
+    momentum = 0.5
     zoom = 0.4
     make_sparse = False
     target_sparsity = 0.1
     layer_repeat_factor = 10
     local_activation_radius = None
+    is_transpose_reconstruction = True
 
     layer1 = {
         'name': "layer1",
@@ -49,6 +50,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -71,6 +73,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': False,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -93,6 +96,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -120,6 +124,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -142,6 +147,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': False,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -164,6 +170,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_decay': learning_rate_decay,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
