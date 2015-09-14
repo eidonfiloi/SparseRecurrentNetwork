@@ -1,10 +1,9 @@
-__author__ = 'ptoth'
-
 from pylab import plot, show, title, xlabel, ylabel, subplot, savefig
 from scipy import fft, arange, ifft
 from numpy import sin, linspace, pi
 from scipy.io.wavfile import read, write
 
+__author__ = 'ptoth'
 
 def plot_spectrum(data, sampling_rate=44100):
     n = len(data)
@@ -21,8 +20,8 @@ def plot_spectrum(data, sampling_rate=44100):
     ylabel('|Y(freq)|')
 
 if __name__ == '__main__':
-    filename = '../bach_output.wav'
-    filename_test = '../bach_output_test.wav'
+    filename = '../resources/bach_goldberg/wave/aria.wav'#bach_output.wav'
+    filename_test = '../resources/bach_goldberg/wave/aria.wav'
 
     Fs = 44100  # sampling rate
 

@@ -75,7 +75,8 @@ def read_wav_as_np(filename):
 
 def write_np_as_wav(X, sample_rate, filename):
     Xnew = X * 32767.0
-    Xnew = np.subtract(Xnew.astype('int16'), np.ones(Xnew.shape))
+    Xnew = Xnew.astype('int16')
+    #Xnew = np.subtract(Xnew.astype('int16'), np.ones(Xnew.shape))
     print np.asarray(Xnew[0:100]).tolist()
     wav.write(filename, sample_rate, Xnew)
     return

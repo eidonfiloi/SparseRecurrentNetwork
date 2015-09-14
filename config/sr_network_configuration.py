@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 30
+        'epochs': 10
     }
 
     verbose = 1
@@ -26,7 +26,7 @@ def get_config():
     make_sparse = False
     target_sparsity = 0.1
     layer_repeat_factor = None
-    momentum = 0.5
+    momentum = 0.8
     local_activation_radius = 0.2
     is_transpose_reconstruction = True
 

@@ -1,3 +1,5 @@
+from scipy.special import expit
+
 __author__ = 'ptoth'
 
 
@@ -9,11 +11,15 @@ class Utils(object):
 
     @staticmethod
     def tanh_derivative(x):
-        return (1.0 - x)*(1.0 + x)
+        return 1.0 - x*x
 
     @staticmethod
     def rectifier_derivative(x):
-        return x
+        return (x > 0.0).astype('int')
+
+    @staticmethod
+    def softplus_derivative(x):
+        return expit(x)
 
     @staticmethod
     def derivative(x, activation_function="Sigmoid"):
@@ -23,5 +29,7 @@ class Utils(object):
             return Utils.rectifier_derivative(x)
         elif activation_function == "Tanh":
             return Utils.tanh_derivative(x)
+        elif activation_function == "SoftPlus":
+            return Utils.softplus_derivative(x)
         else:
-            return 1.0
+            return Utils.sigmoid_derivative(x)

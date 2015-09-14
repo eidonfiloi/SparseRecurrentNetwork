@@ -1,5 +1,3 @@
-__author__ = 'ptoth'
-
 import abc
 
 from Layer import *
@@ -9,6 +7,8 @@ import time
 from math import sqrt
 from utils.Utils import *
 import pickle
+
+__author__ = 'ptoth'
 
 
 class Network(object):

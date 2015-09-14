@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
      # Load up the training data
     _LOGGER.info('Loading training data')
-    input_file = 'data_prepared/test_bach26_freq10'
+    input_file = 'data_prepared/bach_goldberg_var1_10'
     # X_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
     X_train_freq = np.load(input_file + '_x.npy')
     # y_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
@@ -29,11 +29,20 @@ if __name__ == "__main__":
 
     network = SRNetwork(config['network'])
 
-    input_sample = X_train_freq[2]
+    # input_sample = X_train_freq[0]
+    # output = []
+    # for i in range(input_sample.shape[0]):
+    #     output.append(input_sample[i])
+    # for i in xrange(len(output)):
+    #     output[i] *= X_var_freq
+    #     output[i] += X_mean_freq
+    # save_generated_example("bach_golberg_test.wav", output, useTimeDomain=False)
+
+    input_sample = X_train_freq[0]
     max_value = np.max(input_sample)
     input_sample /= max_value
     input_sample = (input_sample + 1.0) / 2.0
-    input_sample_y = y_train_freq[2]
+    input_sample_y = y_train_freq[0]
 
     epochs = config['global']['epochs']
 
@@ -105,7 +114,7 @@ if __name__ == "__main__":
     for i in xrange(len(output)):
         output[i] *= X_var_freq
         output[i] += X_mean_freq
-    save_generated_example("bach_output.wav", output, useTimeDomain=False)
+    save_generated_example("bach_goldberg_var1_output.wav", output, useTimeDomain=False)
 
     plt.ioff()
     plt.subplot(4, 1, 1)

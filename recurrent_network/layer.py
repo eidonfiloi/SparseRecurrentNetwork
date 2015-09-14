@@ -1,9 +1,9 @@
-__author__ = 'ptoth'
-
 from Node import *
 import logging
 import abc
 from copy import copy
+
+__author__ = 'ptoth'
 
 
 class Layer(object):

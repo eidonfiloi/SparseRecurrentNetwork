@@ -1,5 +1,3 @@
-__author__ = 'eidonfiloi'
-
 import numpy as np
 import logging
 from math import sqrt
@@ -7,6 +5,8 @@ from scipy.special import expit
 from copy import deepcopy
 from utils.Utils import *
 import abc
+
+__author__ = 'eidonfiloi'
 
 
 class Node(object):
@@ -114,8 +114,10 @@ class FeedForwardNode(Node):
             self.activations = np.maximum(0.0, sums)
         elif self.activation_function == "Tanh":
             self.activations = np.tanh(sums)
+        elif self.activation_function == "SoftPlus":
+            self.activations = np.log(1.0 + np.exp(sums))
         else:
-            self.activations = sums
+            self.activations = expit(sums)
 
         output = self.activations
         if self.make_sparse:

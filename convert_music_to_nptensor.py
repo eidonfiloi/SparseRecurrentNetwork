@@ -14,7 +14,7 @@ if __name__ == "__main__":
     #Used later for zero-padding song sequences
     max_seq_len = int(round((freq * clip_len) / block_size))
     #Step 1 - convert MP3s to WAVs
-    new_directory = convert_folder_to_wav('resources/', freq)
+    new_directory = convert_folder_to_wav('resources/bach_goldberg/', freq)
     #Step 2 - convert WAVs to frequency domain with mean 0 and standard deviation of 1
-    convert_wav_files_to_nptensor(new_directory, block_size, max_seq_len, 'data_prepared/test_bach26_freq10', useTimeDomain=False)
+    convert_wav_files_to_nptensor(new_directory, block_size, max_seq_len, 'data_prepared/bach_goldberg_var1_10', useTimeDomain=False)
 
