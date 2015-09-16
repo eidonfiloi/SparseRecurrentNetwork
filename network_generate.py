@@ -12,9 +12,9 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-     # Load up the training data
+    # Load up the training data
     _LOGGER.info('Loading training data')
-    input_file = 'data_prepared/test_bach26_freq10'
+    input_file = 'data_prepared/bach_goldberg_aria_10'
     # X_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
     X_train_freq = np.load(input_file + '_x.npy')
     # y_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
@@ -29,15 +29,16 @@ if __name__ == "__main__":
 
     network = SRNetwork(config['network'])
 
-    input_sample = X_train_freq[2]
+    input_sample = X_train_freq[0]
     max_value = np.max(input_sample)
     input_sample /= max_value
     input_sample = (input_sample + 1.0) / 2.0
-    input_sample_y = y_train_freq[2]
+    input_sample_y = y_train_freq[0]
 
     epochs = config['global']['epochs']
 
     output = []
+    output_gen = []
 
     feedforward_errors = {layer['name']: [] for layer in config['network']['layers']}
     recurrent_errors = {layer['name']: [] for layer in config['network']['layers']}
@@ -47,6 +48,7 @@ if __name__ == "__main__":
     prev_j = -1
     prev_output = None
     network_output = None
+    network_output_gen = None
     for j in range(epochs):
         for i in range(input_sample.shape[0]):
             #for k in range(X_train.shape[0]):
@@ -58,37 +60,47 @@ if __name__ == "__main__":
                 '############## sample {2}\n '
                 '############## input min is {3}, max is {4}'.format(j, 1, i, np.min(input_), np.max(input_)))
             network_output, mse = network.run(input_)
+            if (i+1) % 10 == 0:
+                network_output_gen = network_output
+                output_gen.append((2.0*network_output_gen - 1.0)*max_value)
+                for k in range(20):
+                    network_output_gen, mse_gen = network.run(network_output_gen, learning_on=False)
+                    output_gen.append(network_output_gen)
+                    _LOGGER.info('###########################\n'
+                                 '{0} generated output\n'
+                                 '{1}\n'
+                                 '###########################'.format(k, network_output_gen))
             output_mse.append(mse)
             if prev_output is not None:
-                    prev_output_bin = np.zeros(prev_output.size).astype('int')
-                    for ind in range(0, prev_output.size):
-                        if prev_output[ind] > 0.5:
-                            prev_output_bin[ind] = 1
-                        else:
-                            prev_output_bin[ind] = 0
-                    mod_input = np.zeros(input_.size).astype('int')
-                    for ind in range(0, input_.size):
-                        if input_[ind] >= 0.5:
-                            mod_input[ind] = 1
+                prev_output_bin = np.zeros(prev_output.size).astype('int')
+                for ind in range(0, prev_output.size):
+                    if prev_output[ind] > 0.5:
+                        prev_output_bin[ind] = 1
+                    else:
+                        prev_output_bin[ind] = 0
+                mod_input = np.zeros(input_.size).astype('int')
+                for ind in range(0, input_.size):
+                    if input_[ind] >= 0.5:
+                        mod_input[ind] = 1
 
-                    print '############### epoch: {0}\n' \
-                          '############### sequence: {1}\n' \
-                          '############### input: \n' \
-                          '{2}\n' \
-                          '############### prev_output_bin: \n' \
-                          '{3}\n' \
-                          '############### prev_output: \n' \
-                          '{4}\n' \
-                          'output_error: {5}'.format(j, i, input_, prev_output_bin, prev_output, mse)
-                    plt.ion()
-                    plt.axis([-1, 90, -1, 98])
-                    x_r, y_r = np.argwhere(mod_input.reshape(90, 98) == 1).T
-                    x_t, y_t = np.argwhere(prev_output_bin.reshape(90, 98) == 1).T
-                    plt.scatter(x_r, y_r, alpha=0.5, c='r', marker='s', s=15)
-                    plt.scatter(x_t, y_t, alpha=0.5, c='b', marker='o', s=13)
-                    plt.draw()
-                    time.sleep(0.1)
-                    plt.clf()
+                print '############### epoch: {0}\n' \
+                      '############### sequence: {1}\n' \
+                      '############### input: \n' \
+                      '{2}\n' \
+                      '############### prev_output_bin: \n' \
+                      '{3}\n' \
+                      '############### prev_output: \n' \
+                      '{4}\n' \
+                      'output_error: {5}'.format(j, i, input_, prev_output_bin, prev_output, mse)
+                plt.ion()
+                plt.axis([-1, 90, -1, 98])
+                x_r, y_r = np.argwhere(mod_input.reshape(90, 98) == 1).T
+                x_t, y_t = np.argwhere(prev_output_bin.reshape(90, 98) == 1).T
+                plt.scatter(x_r, y_r, alpha=0.5, c='r', marker='s', s=15)
+                plt.scatter(x_t, y_t, alpha=0.5, c='b', marker='o', s=13)
+                plt.draw()
+                time.sleep(0.1)
+                plt.clf()
             prev_output = copy(network_output)
             for key, v in network.feedforward_errors.items():
                 if len(v) > 0:
@@ -100,24 +112,25 @@ if __name__ == "__main__":
                 if len(v) > 0:
                     feedback_errors[key].append(v[0])
             _LOGGER.info('output length {0}\n{1}'.format(len(network_output), network_output[0:20]))
+            network_output_gen = network_output
             network_output = 2.0*network_output - 1.0
             output.append(network_output * max_value)
-
-    for i in xrange(len(output)):
-        output[i] *= X_var_freq
-        output[i] += X_mean_freq
-    save_generated_example("bach_output.wav", output, useTimeDomain=False)
-
-    output_gen = []
-    inp_gen = (network_output + 1.0) / 2.0
-    for i in range(50):
-        inp_gen, mse = network.run(inp_gen, False)
-        output_gen.append((2.0*inp_gen - 1.0)*max_value)
 
     for i in xrange(len(output_gen)):
         output_gen[i] *= X_var_freq
         output_gen[i] += X_mean_freq
-    save_generated_example("bach_output_gen.wav", output_gen, useTimeDomain=False)
+    save_generated_example("bach_goldberg_aria_output_gen.wav", output_gen, useTimeDomain=False)
+
+    output_gen = []
+    inp_gen = network_output_gen
+    for i in range(500):
+        _LOGGER.info('###########################\n'
+                     '{0} generated output\n'
+                     '{1}\n'
+                     '###########################'.format(i, inp_gen))
+        inp_gen, mse = network.run(inp_gen, False)
+        output_gen.append((2.0*inp_gen - 1.0)*max_value)
+
 
     plt.ioff()
     plt.subplot(4, 1, 1)

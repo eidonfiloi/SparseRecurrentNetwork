@@ -210,7 +210,7 @@ class SRNetwork(Network):
 
         return prediction, output_mse
 
-    def feedforward_pass(self, inputs):
+    def feedforward_pass(self, inputs, learning_on=True):
         current_input = inputs
         current_activation = inputs
         prediction = None
@@ -219,24 +219,25 @@ class SRNetwork(Network):
 
             # ###################### feedforward pass ######################
 
-            if ind == 0:
-                current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation)
+            if ind < self.num_layers - 1:
+
+                current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation, learning_on)
                 self.feedforward_errors[layer.name].append(error)
                 self.feedforward_outputs[layer.name].append(current_input)
 
-                recurrent_output, error = layer.generate_recurrent(current_input, current_activation)
+                recurrent_output, error = layer.generate_recurrent(current_input, current_activation, learning_on)
                 self.recurrent_errors[layer.name].append(error)
                 self.recurrent_outputs[layer.name].append(recurrent_output)
 
-            elif ind == self.num_layers - 1:
+                current_input = np.concatenate((layer.prev_recurrent_output, current_input))
+                current_activation = np.concatenate((layer.prev_recurrent_output_activations, current_activation))
 
-                current_input, current_activation, error = layer.generate_feedforward(
-                    np.concatenate((layer.prev_recurrent_output, current_input)),
-                    np.concatenate((layer.prev_recurrent_output_activations, current_activation)))
+            else:
+                current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation, learning_on)
                 self.feedforward_errors[layer.name].append(error)
                 self.feedforward_outputs[layer.name].append(current_input)
 
-                recurrent_output, error = layer.generate_recurrent(current_input, current_activation)
+                recurrent_output, error = layer.generate_recurrent(current_input, current_activation, learning_on)
                 self.recurrent_errors[layer.name].append(error)
                 self.recurrent_outputs[layer.name].append(recurrent_output)
 
@@ -244,30 +245,20 @@ class SRNetwork(Network):
 
                 for ind_back, layer_back in enumerate(reversed(self.layers)):
                     if ind_back == 0:
-                        current_input, current_activation, error = layer_back.generate_feedback(layer_back.recurrent_output, layer_back.recurrent_output_activations)
+                        current_input, current_activation, error = layer_back.generate_feedback(layer_back.recurrent_output, layer_back.recurrent_output_activations, learning_on)
                         self.feedback_outputs[layer_back.name].append(current_input)
                         self.feedback_errors[layer_back.name].append(error)
                     elif ind_back == self.num_layers - 1:
                         prediction, current_activation, error = layer_back.generate_feedback(
-                            np.concatenate([layer_back.recurrent_output, current_input]), np.concatenate([layer_back.recurrent_output_activations, current_activation]))
+                            np.concatenate([layer_back.recurrent_output, current_input]), np.concatenate([layer_back.recurrent_output_activations, current_activation]), learning_on)
                         self.feedback_errors[layer_back.name].append(error)
                         prediction = current_activation
                     else:
                         current_input, current_activation, error = layer_back.generate_feedback(
                             np.concatenate([layer_back.recurrent_output, current_input]),
-                            np.concatenate([layer_back.recurrent_output_activations, current_activation]))
+                            np.concatenate([layer_back.recurrent_output_activations, current_activation]), learning_on)
                         self.feedback_outputs[layer_back.name].append(current_input)
                         self.feedback_errors[layer_back.name].append(error)
-            else:
-                current_input, current_activation, error = layer.generate_feedforward(
-                    np.concatenate((layer.prev_recurrent_output, current_input)),
-                    np.concatenate((layer.prev_recurrent_output_activations, current_activation)))
-                self.feedforward_errors[layer.name].append(error)
-                self.feedforward_outputs[layer.name].append(current_input)
-
-                recurrent_output, error = layer.generate_recurrent(current_input, current_activation)
-                self.recurrent_errors[layer.name].append(error)
-                self.recurrent_outputs[layer.name].append(recurrent_output)
 
         return prediction
 

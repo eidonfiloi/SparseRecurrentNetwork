@@ -51,30 +51,35 @@ class SRLayer(Layer):
         self.prev_feedback_input = None
         self.prev_feedback_output = None
 
-    def generate_feedforward(self, inputs, activations):
+    def generate_feedforward(self, inputs, activations, learning_on=True):
         self.feedforward_input = activations
         self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
-        error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
+        error = None
+        if learning_on:
+            error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
         if self.repeat_factor is not None:
             for i in range(self.repeat_factor - 1):
                 self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
-                error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
+                if learning_on:
+                    error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
         self.feedforward_output_activations = self.feedforward_node.activations
         return self.feedforward_output, self.feedforward_node.activations, error
 
-    def generate_recurrent(self, inputs, activations):
+    def generate_recurrent(self, inputs, activations, learning_on=True):
         self.recurrent_input = activations
         error = None
         self.recurrent_output = self.recurrent_node.generate_node_output(inputs)
-        if self.prev_recurrent_output is not None and self.feedforward_output is not None and self.prev_recurrent_input is not None:
+        if learning_on and self.prev_recurrent_output is not None and self.feedforward_output is not None and self.prev_recurrent_input is not None:
             error = self.recurrent_node.learn_reconstruction(inputs, self.prev_recurrent_output, self.prev_recurrent_input, False)
         self.recurrent_output_activations = self.recurrent_node.activations
         return self.recurrent_output, error
 
-    def generate_feedback(self, inputs, activations):
+    def generate_feedback(self, inputs, activations, learning_on=True):
         self.feedback_input = activations
         self.feedback_output = self.feedback_node.generate_node_output(inputs)
-        error = self.feedback_node.learn_reconstruction(inputs, self.feedback_output)
+        error = None
+        if learning_on:
+            error = self.feedback_node.learn_reconstruction(inputs, self.feedback_output)
         return self.feedback_output, self.feedback_node.activations, error
 
     def backpropagate_feedback(self, delta):

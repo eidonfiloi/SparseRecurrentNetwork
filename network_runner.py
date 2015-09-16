@@ -76,7 +76,7 @@ if __name__ == "__main__":
                             prev_output_bin[ind] = 0
                     mod_input = np.zeros(input_.size).astype('int')
                     for ind in range(0, input_.size):
-                        if input_[ind] >= 0.5:
+                        if input_[ind] > 0.5:
                             mod_input[ind] = 1
 
                     print '############### epoch: {0}\n' \

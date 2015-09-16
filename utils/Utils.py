@@ -15,7 +15,8 @@ class Utils(object):
 
     @staticmethod
     def rectifier_derivative(x):
-        return (x > 0.0).astype('int')
+        res = (x > 0.0).astype('int')
+        return res
 
     @staticmethod
     def softplus_derivative(x):

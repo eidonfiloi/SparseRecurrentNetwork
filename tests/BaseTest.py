@@ -11,3 +11,14 @@ class BaseTest(unittest.TestCase):
         arr = np.array([1.0, 2.0, 3.0])
 
         print arr * (1.0 - arr)
+
+    def iterator_test(self):
+
+        data = np.array([[[1, 2, 3], [4, 5, 6]], [[10, 20, 30], [40, 50, 60]]])
+        print data.shape
+        it = np.nditer(data, order='F')
+
+        while not it.finished:
+            print it
+            it.iternext()
+
