@@ -63,3 +63,5 @@ resources/
 .idea/
 
 *.wav
+
+*.pickle
