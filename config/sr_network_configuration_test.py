@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 20
+        'epochs': 60
     }
 
     verbose = 1
@@ -58,7 +58,7 @@ def get_config():
         },
         'recurrent': {
             'name': "layer1-recurrent",
-            'inputs_size': 16,
+            'inputs_size': 32,
             'output_size': 16,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -132,7 +132,7 @@ def get_config():
         },
         'recurrent': {
             'name': "layer2-recurrent",
-            'inputs_size': 16,
+            'inputs_size': 32,
             'output_size': 16,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -146,12 +146,12 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay/5,
+            'learning_rate_decay': learning_rate_decay,
             'is_transpose_reconstruction': False,
-            'weights_lr': w_lr/5,
-            'inhibition_lr': inh_lr/5,
-            'bias_lr': b_lr/5,
-            'recon_bias_lr': r_b_lr/5
+            'weights_lr': w_lr,
+            'inhibition_lr': inh_lr,
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'feedback': {
             'name': "layer2-feedback",

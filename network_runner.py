@@ -39,7 +39,7 @@ if __name__ == "__main__":
     #     output[i] += X_mean_freq
     # save_generated_example("bach_golberg_test.wav", output, useTimeDomain=False)
 
-    input_sample = X_train_freq[0][0:3]
+    input_sample = X_train_freq[0][20:45]
     max_value = np.max(input_sample)
     input_sample /= max_value
     input_sample = (input_sample + 1.0) / 2.0

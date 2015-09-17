@@ -225,17 +225,19 @@ class SRNetwork(Network):
                 self.feedforward_errors[layer.name].append(error)
                 self.feedforward_outputs[layer.name].append(current_input)
 
-                recurrent_output, error = layer.generate_recurrent(current_input, current_activation, learning_on)
-                self.recurrent_errors[layer.name].append(error)
-                self.recurrent_outputs[layer.name].append(recurrent_output)
-
                 current_input = np.concatenate((layer.prev_recurrent_output, current_input))
                 current_activation = np.concatenate((layer.prev_recurrent_output_activations, current_activation))
 
+                recurrent_output, error = layer.generate_recurrent(current_input, current_activation, learning_on)
+                self.recurrent_errors[layer.name].append(error)
+                self.recurrent_outputs[layer.name].append(recurrent_output)
             else:
                 current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation, learning_on)
                 self.feedforward_errors[layer.name].append(error)
                 self.feedforward_outputs[layer.name].append(current_input)
+
+                current_input = np.concatenate((layer.prev_recurrent_output, current_input))
+                current_activation = np.concatenate((layer.prev_recurrent_output_activations, current_activation))
 
                 recurrent_output, error = layer.generate_recurrent(current_input, current_activation, learning_on)
                 self.recurrent_errors[layer.name].append(error)
@@ -277,10 +279,7 @@ class SRNetwork(Network):
                     # ###################### backpropagation for feedforward ######################
 
                     for ind_backprop_back, layer_backprop_back in enumerate(reversed(self.layers)):
-                        if ind_backprop_back == 0:
-                            forward_delta = delta_backpropagate
-                        else:
-                            forward_delta = delta_backpropagate[layer_backprop_back.recurrent_node.output_size:]
+                        forward_delta = delta_backpropagate[layer_backprop_back.recurrent_node.output_size:]
                         delta_backpropagate = layer_backprop_back.backpropagate_feedforward(forward_delta)
                         self.feedforward_deltas[layer_backprop_back.name].append(delta_backpropagate)
                 else:

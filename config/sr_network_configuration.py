@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 1
+        'epochs': 50
     }
 
     verbose = 1
@@ -58,7 +58,7 @@ def get_config():
         },
         'recurrent': {
             'name': "layer1-recurrent",
-            'inputs_size': 1024,
+            'inputs_size': 1536,
             'output_size': 512,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -132,7 +132,7 @@ def get_config():
         },
         'recurrent': {
             'name': "layer2-recurrent",
-            'inputs_size': 512,
+            'inputs_size': 768,
             'output_size': 256,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -206,7 +206,7 @@ def get_config():
         },
         'recurrent': {
             'name': "layer3-recurrent",
-            'inputs_size': 256,
+            'inputs_size': 512,
             'output_size': 256,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
@@ -329,7 +329,7 @@ def get_config():
     params['network'] = {
         'name': "aria_network_test.pickle",
         'verbose': verbose,
-        'serialize': True,
+        'serialize': False,
         'activation_function': activation_function,
         'visualize_states': False,
         'input': {

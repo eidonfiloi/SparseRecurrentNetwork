@@ -50,7 +50,7 @@ class SRNetworkTest(unittest.TestCase):
             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
         ])
 
-        input_series = simple_sequence #simple_sequence #long_sequence #constant
+        input_series = long_sequence #simple_sequence #long_sequence #constant
 
         sd_input_series = preprocessing.scale(input_series)
 
