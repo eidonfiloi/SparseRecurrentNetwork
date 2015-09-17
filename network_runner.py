@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from recurrent_network.Network import *
 import config.sr_network_configuration as base_config
 from data_io.audio_data_utils import *
+import pickle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ if __name__ == "__main__":
 
      # Load up the training data
     _LOGGER.info('Loading training data')
-    input_file = 'data_prepared/bach_goldberg_var1_10'
+    input_file = 'data_prepared/bach_goldberg_aria_10'
     # X_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
     X_train_freq = np.load(input_file + '_x.npy')
     # y_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     #     output[i] += X_mean_freq
     # save_generated_example("bach_golberg_test.wav", output, useTimeDomain=False)
 
-    input_sample = X_train_freq[0]
+    input_sample = X_train_freq[0][0:3]
     max_value = np.max(input_sample)
     input_sample /= max_value
     input_sample = (input_sample + 1.0) / 2.0
@@ -111,10 +112,15 @@ if __name__ == "__main__":
             network_output = 2.0*network_output - 1.0
             output.append(network_output * max_value)
 
+    if config['network']['serialize']:
+        with open('serialized_models/{0}'.format(network.name), 'wb') as f:
+            pickle.dump(network, f)
+        #network.serialize('serialized_models/{0}'.format(network.name))
+
     for i in xrange(len(output)):
         output[i] *= X_var_freq
         output[i] += X_mean_freq
-    save_generated_example("bach_goldberg_var1_output.wav", output, useTimeDomain=False)
+    save_generated_example("bach_goldberg_aria_10.wav", output, useTimeDomain=False)
 
     plt.ioff()
     plt.subplot(4, 1, 1)

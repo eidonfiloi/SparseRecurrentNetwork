@@ -16,13 +16,13 @@ def get_config():
     max_w = 1.0
     lifetime_sparsity = 0.014
     duty_cycle_decay = 0.006
-    w_lr = 0.1
-    inh_lr = 0.1
-    b_lr = 0.1
-    r_b_lr = 0.1
-    learning_rate_decay = 0.05
+    w_lr = 0.05
+    inh_lr = 0.05
+    b_lr = 0.05
+    r_b_lr = 0.05
+    learning_rate_decay = 0.01
     dropout_ratio = None
-    momentum = 0.5
+    momentum = 0.9
     zoom = 0.4
     make_sparse = False
     target_sparsity = 0.1
@@ -123,12 +123,12 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay,
+            'learning_rate_decay': learning_rate_decay/5,
             'is_transpose_reconstruction': is_transpose_reconstruction,
-            'weights_lr': w_lr,
-            'inhibition_lr': inh_lr,
-            'bias_lr': b_lr,
-            'recon_bias_lr': r_b_lr
+            'weights_lr': w_lr/5,
+            'inhibition_lr': inh_lr/5,
+            'bias_lr': b_lr/5,
+            'recon_bias_lr': r_b_lr/5
         },
         'recurrent': {
             'name': "layer2-recurrent",
@@ -146,12 +146,12 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay,
+            'learning_rate_decay': learning_rate_decay/5,
             'is_transpose_reconstruction': False,
-            'weights_lr': w_lr,
-            'inhibition_lr': inh_lr,
-            'bias_lr': b_lr,
-            'recon_bias_lr': r_b_lr
+            'weights_lr': w_lr/5,
+            'inhibition_lr': inh_lr/5,
+            'bias_lr': b_lr/5,
+            'recon_bias_lr': r_b_lr/5
         },
         'feedback': {
             'name': "layer2-feedback",
@@ -169,12 +169,12 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay,
+            'learning_rate_decay': learning_rate_decay/5,
             'is_transpose_reconstruction': is_transpose_reconstruction,
-            'weights_lr': w_lr,
-            'inhibition_lr': inh_lr,
-            'bias_lr': b_lr,
-            'recon_bias_lr': r_b_lr
+            'weights_lr': w_lr/5,
+            'inhibition_lr': inh_lr/5,
+            'bias_lr': b_lr/5,
+            'recon_bias_lr': r_b_lr/5
         }
     }
 
