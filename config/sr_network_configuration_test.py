@@ -36,7 +36,7 @@ def get_config():
         'repeat_factor': 1,
         'feedforward': {
             'name': "layer1-feedforward",
-            'inputs_size': 16,
+            'inputs_size': 32,
             'output_size': 16,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,

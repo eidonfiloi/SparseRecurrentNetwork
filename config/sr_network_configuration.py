@@ -22,11 +22,11 @@ def get_config():
     r_b_lr = 0.01
     learning_rate_increase = 0.005
     learning_rate_decrease = 0.995
-    dropout_ratio = 0.5
+    dropout_ratio = 0.2
     zoom = 0.4
     make_sparse = False
     target_sparsity = 0.1
-    layer_repeat_factor = 5
+    layer_repeat_factor = 1
     momentum = 0.5
     local_activation_radius = 0.2
     is_transpose_reconstruction = True
@@ -36,14 +36,14 @@ def get_config():
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer1-feedforward",
-            'inputs_size': 8820,
+            'inputs_size': 17640,
             'output_size': 1024,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout_ratio': 0.2,
+            'dropout_ratio': 0.1,
             'momentum': momentum,
             'local_activation_radius': local_activation_radius,
             'zoom': zoom,
