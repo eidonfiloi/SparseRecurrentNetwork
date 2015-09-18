@@ -53,40 +53,38 @@ class SRLayer(Layer):
 
     def generate_feedforward(self, inputs, activations, learning_on=True):
         self.feedforward_input = activations
-        self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
-        error = None
-        if learning_on:
-            error = self.feedforward_node.learn_reconstruction(inputs,
-                                                               self.feedforward_output,
-                                                               backpropagate_hidden=True)
-        if self.repeat_factor is not None:
-            for i in range(self.repeat_factor - 1):
-                self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
-                if learning_on:
-                    error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
+        for i in range(self.repeat_factor):
+            self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
+            error = None
+            if learning_on:
+                error = self.feedforward_node.learn_reconstruction(inputs,
+                                                                   self.feedforward_output,
+                                                                   backpropagate_hidden=True)
         self.feedforward_output_activations = self.feedforward_node.activations
         return self.feedforward_output, self.feedforward_node.activations, error
 
     def generate_recurrent(self, inputs, activations, learning_on=True):
         self.recurrent_input = activations
         error = None
-        self.recurrent_output = self.recurrent_node.generate_node_output(inputs)
-        if learning_on:
-            error = self.recurrent_node.learn_reconstruction(inputs,
-                                                             self.prev_recurrent_output,
-                                                             input_target=self.prev_recurrent_input,
-                                                             backpropagate_hidden=False)
+        for i in range(self.repeat_factor):
+            self.recurrent_output = self.recurrent_node.generate_node_output(inputs)
+            if learning_on:
+                error = self.recurrent_node.learn_reconstruction(inputs,
+                                                                 self.prev_recurrent_output,
+                                                                 input_target=self.prev_recurrent_input,
+                                                                 backpropagate_hidden=False)
         self.recurrent_output_activations = self.recurrent_node.activations
         return self.recurrent_output, error
 
     def generate_feedback(self, inputs, activations, learning_on=True):
         self.feedback_input = activations
-        self.feedback_output = self.feedback_node.generate_node_output(inputs)
-        error = None
-        if learning_on:
-            error = self.feedback_node.learn_reconstruction(inputs,
-                                                            self.feedback_output,
-                                                            backpropagate_hidden=True)
+        for i in range(self.repeat_factor):
+            self.feedback_output = self.feedback_node.generate_node_output(inputs)
+            error = None
+            if learning_on:
+                error = self.feedback_node.learn_reconstruction(inputs,
+                                                                self.feedback_output,
+                                                                backpropagate_hidden=True)
         return self.feedback_output, self.feedback_node.activations, error
 
     def backpropagate_feedback(self, delta):

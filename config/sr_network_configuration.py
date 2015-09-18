@@ -26,7 +26,7 @@ def get_config():
     zoom = 0.4
     make_sparse = False
     target_sparsity = 0.1
-    layer_repeat_factor = None
+    layer_repeat_factor = 5
     momentum = 0.5
     local_activation_radius = 0.2
     is_transpose_reconstruction = True
