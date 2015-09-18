@@ -36,27 +36,29 @@ class SRLayer(Layer):
         self.feedforward_input = None
         self.feedforward_output = None
         self.feedforward_output_activations = None
-        self.prev_feedforward_input = None
-        self.prev_feedforward_output = None
+        self.prev_feedforward_input = np.zeros(self.feedforward_node.inputs_size)
+        self.prev_feedforward_output = np.zeros(self.feedforward_node.output_size)
 
         self.recurrent_input = None
         self.recurrent_output = None
         self.recurrent_output_activations = None
-        self.prev_recurrent_input = np.random.rand(self.feedforward_node.activations.size)
+        self.prev_recurrent_input = np.random.rand(self.feedforward_node.activations.size + self.recurrent_node.output_size)
         self.prev_recurrent_output = np.random.rand(self.recurrent_node.activations.size)
         self.prev_recurrent_output_activations = np.random.rand(self.recurrent_node.activations.size)
 
         self.feedback_input = None
         self.feedback_output = None
-        self.prev_feedback_input = None
-        self.prev_feedback_output = None
+        self.prev_feedback_input = np.zeros(self.feedback_node.inputs_size)
+        self.prev_feedback_output = np.zeros(self.feedback_node.output_size)
 
     def generate_feedforward(self, inputs, activations, learning_on=True):
         self.feedforward_input = activations
         self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
         error = None
         if learning_on:
-            error = self.feedforward_node.learn_reconstruction(inputs, self.feedforward_output)
+            error = self.feedforward_node.learn_reconstruction(inputs,
+                                                               self.feedforward_output,
+                                                               backpropagate_hidden=True)
         if self.repeat_factor is not None:
             for i in range(self.repeat_factor - 1):
                 self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
@@ -69,7 +71,7 @@ class SRLayer(Layer):
         self.recurrent_input = activations
         error = None
         self.recurrent_output = self.recurrent_node.generate_node_output(inputs)
-        if learning_on and self.prev_recurrent_output is not None and self.feedforward_output is not None and self.prev_recurrent_input is not None:
+        if learning_on:
             error = self.recurrent_node.learn_reconstruction(inputs,
                                                              self.prev_recurrent_output,
                                                              input_target=self.prev_recurrent_input,
@@ -84,7 +86,7 @@ class SRLayer(Layer):
         if learning_on:
             error = self.feedback_node.learn_reconstruction(inputs,
                                                             self.feedback_output,
-                                                            backpropagate_hidden=False)
+                                                            backpropagate_hidden=True)
         return self.feedback_output, self.feedback_node.activations, error
 
     def backpropagate_feedback(self, delta):

@@ -22,3 +22,9 @@ class BaseTest(unittest.TestCase):
             print it
             it.iternext()
 
+    def dropout_test(self):
+
+        dropout_matrix = np.random.binomial(1, 0.5, 3)
+
+        print dropout_matrix
+

@@ -61,8 +61,7 @@ class SRNetwork(Network):
         self.recurrent_deltas = {layer.name: [] for layer in self.layers}
         self.feedback_deltas = {layer.name: [] for layer in self.layers}
 
-        self.previous_prediction = None
-        self.previous_delta_backpropagate = None
+        self.previous_prediction = np.zeros(self.layers[0].feedforward_node.inputs_size)
 
     def run(self, inputs, learning_on=True):
         self.feedforward_errors = {layer.name: [] for layer in self.layers}
@@ -78,14 +77,13 @@ class SRNetwork(Network):
         self.feedback_deltas = {layer.name: [] for layer in self.layers}
 
         output_mse = None
-        if learning_on:
-            if self.previous_prediction is not None:
-                output_error = self.previous_prediction - inputs
-                output_mse = sqrt(np.mean(np.abs(output_error) ** 2, axis=0))
-                self.logger.info('output error is {0}'.format(output_mse))
-                delta_backpropagate = output_error * Utils.derivative(self.previous_prediction, self.activation_function)
-                self.backpropagate(delta_backpropagate)
         prediction = self.feedforward_pass(inputs)
+        if learning_on:
+            output_error = self.previous_prediction - inputs
+            output_mse = sqrt(np.mean(np.abs(output_error) ** 2, axis=0))
+            self.logger.info('output error is {0}'.format(output_mse))
+            delta_backpropagate = output_error * Utils.derivative(self.previous_prediction, self.activation_function)
+            self.backpropagate(delta_backpropagate)
         self.previous_prediction = deepcopy(prediction)
         if self.visualize_states:
             self.visualize_hidden_states(self.feedforward_outputs, self.recurrent_outputs)

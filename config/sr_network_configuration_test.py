@@ -20,7 +20,8 @@ def get_config():
     inh_lr = 0.05
     b_lr = 0.05
     r_b_lr = 0.05
-    learning_rate_decay = 0.01
+    learning_rate_increase = 0.01
+    learning_rate_decrease = 0.09
     dropout_ratio = None
     momentum = 0.9
     zoom = 0.4
@@ -49,7 +50,8 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay,
+            'learning_rate_increase': learning_rate_increase,
+            'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
@@ -72,7 +74,8 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay,
+            'learning_rate_increase': learning_rate_increase,
+            'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
@@ -95,7 +98,8 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay,
+            'learning_rate_increase': learning_rate_increase,
+            'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
@@ -123,7 +127,8 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay/5,
+            'learning_rate_increase': learning_rate_increase/5,
+            'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr/5,
             'inhibition_lr': inh_lr/5,
@@ -146,7 +151,8 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay,
+            'learning_rate_increase': learning_rate_increase/5,
+            'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
@@ -169,7 +175,8 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_decay': learning_rate_decay/5,
+            'learning_rate_increase': learning_rate_increase/5,
+            'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr/5,
             'inhibition_lr': inh_lr/5,
