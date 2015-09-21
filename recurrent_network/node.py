@@ -14,40 +14,89 @@ class Node(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, parameters):
+    def __init__(self, parameters, serialized_object=None):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.name = parameters['name']
-        self.inputs_size = parameters['inputs_size']
-        self.output_size = parameters['output_size']
-        self.activation_function = parameters['activation_function']
-        self.activation_threshold = parameters['activation_threshold']
+        if serialized_object is not None:
+            self.parameters = parameters
 
-        self.b = sqrt(6.0 / (self.inputs_size + self.output_size))
-        self.min_weight = -self.b
-        self.max_weight = self.b
+            self.name = self.parameters['name']
+            self.inputs_size = self.parameters['inputs_size']
+            self.output_size = self.parameters['output_size']
+            self.activation_function = self.parameters['activation_function']
+            self.activation_threshold = self.parameters['activation_threshold']
 
-        self.momentum = parameters['momentum']
-        self.velocity = np.zeros((self.inputs_size, self.output_size)) if self.momentum is not None else None
+            self.b = sqrt(6.0 / (self.inputs_size + self.output_size))
+            self.min_weight = -self.b
+            self.max_weight = self.b
 
-        self.dropout_ratio = parameters['dropout_ratio']
+            self.momentum = self.parameters['momentum']
+            self.velocity = serialized_object['velocity']
 
+            self.dropout_ratio = self.parameters['dropout_ratio']
+
+            if self.dropout_ratio is not None:
+                self.dropout = serialized_object['dropout']
+
+            self.weights_lr = self.parameters['weights_lr']
+            self.bias_lr = self.parameters['bias_lr']
+
+            self.weights = serialized_object['weights']
+            self.biases = serialized_object['biases']
+            self.activations = np.zeros(self.output_size)
+            self.sdr = np.ones(self.output_size)
+            self.learning_rate_increase = self.parameters['learning_rate_increase']
+            self.learning_rate_decrease = self.parameters['learning_rate_decrease']
+            self.local_gain = serialized_object['local_gain']
+            self.prev_local_gain = serialized_object['prev_local_gain']
+        else:
+            self.parameters = parameters
+            self.name = parameters['name']
+            self.inputs_size = parameters['inputs_size']
+            self.output_size = parameters['output_size']
+            self.activation_function = parameters['activation_function']
+            self.activation_threshold = parameters['activation_threshold']
+
+            self.b = sqrt(6.0 / (self.inputs_size + self.output_size))
+            self.min_weight = -self.b
+            self.max_weight = self.b
+
+            self.momentum = parameters['momentum']
+            self.velocity = np.zeros((self.inputs_size, self.output_size)) if self.momentum is not None else None
+
+            self.dropout_ratio = parameters['dropout_ratio']
+
+            if self.dropout_ratio is not None:
+                self.dropout = np.random.binomial(1, self.dropout_ratio, self.inputs_size)
+
+            self.weights_lr = parameters['weights_lr']
+            self.bias_lr = parameters['bias_lr']
+
+            self.weights = np.random.rand(self.inputs_size, self.output_size) * \
+                (self.max_weight - self.min_weight) + self.min_weight
+            self.biases = np.random.rand(self.output_size) * (self.max_weight - self.min_weight) + self.min_weight
+            self.activations = np.zeros(self.output_size)
+            self.sdr = np.ones(self.output_size)
+            self.learning_rate_increase = parameters['learning_rate_increase']
+            self.learning_rate_decrease = parameters['learning_rate_decrease']
+            self.local_gain = np.ones((self.inputs_size, self.output_size))
+            self.prev_local_gain = np.ones((self.inputs_size, self.output_size))
+
+    def serialize(self):
+
+        serialized_object = {}
+
+        serialized_object['parameters'] = self.parameters
+        serialized_object['weights'] = self.weights
+        serialized_object['biases'] = self.biases
+        serialized_object['velocity'] = self.velocity
         if self.dropout_ratio is not None:
-            self.dropout = np.random.binomial(1, self.dropout_ratio, self.inputs_size)
-
-        self.weights_lr = parameters['weights_lr']
-        self.bias_lr = parameters['bias_lr']
-
-        self.weights = np.random.rand(self.inputs_size, self.output_size) * \
-            (self.max_weight - self.min_weight) + self.min_weight
-        self.biases = np.random.rand(self.output_size) * (self.max_weight - self.min_weight) + self.min_weight
-        self.activations = np.zeros(self.output_size)
-        self.sdr = np.ones(self.output_size)
-        self.learning_rate_increase = parameters['learning_rate_increase']
-        self.learning_rate_decrease = parameters['learning_rate_decrease']
-        self.local_gain = np.ones((self.inputs_size, self.output_size))
-        self.prev_local_gain = np.ones((self.inputs_size, self.output_size))
-
+            serialized_object['dropout'] = self.dropout
+        serialized_object['local_gain'] = self.local_gain
+        serialized_object['prev_local_gain'] = self.prev_local_gain
+        
+        return serialized_object
+    
     @abc.abstractmethod
     def generate_node_output(self, inputs):
         """
@@ -69,16 +118,29 @@ class FeedForwardNode(Node):
 
     """ A feedforward node capable of generating feedforward output and backpropagating errors """
 
-    def __init__(self, parameters):
-        super(FeedForwardNode, self).__init__(parameters)
+    def __init__(self, parameters, serialized_object=None):
 
-        self.lifetime_sparsity = parameters['lifetime_sparsity']
-        self.duty_cycle_decay = parameters['duty_cycle_decay']
-        self.make_sparse = parameters['make_sparse']
-        self.target_sparsity = parameters['target_sparsity']
-        self.inhibition_lr = parameters['inhibition_lr']
-        self.inhibition = np.zeros((self.output_size, self.output_size))
-        self.duty_cycles = np.zeros(self.output_size)
+        super(FeedForwardNode, self).__init__(parameters, serialized_object)
+
+        if serialized_object is not None:
+            self.inhibition = serialized_object['inhibition']
+            self.duty_cycles = serialized_object['duty_cycles']
+        else:
+            self.lifetime_sparsity = parameters['lifetime_sparsity']
+            self.duty_cycle_decay = parameters['duty_cycle_decay']
+            self.make_sparse = parameters['make_sparse']
+            self.target_sparsity = parameters['target_sparsity']
+            self.inhibition_lr = parameters['inhibition_lr']
+            self.inhibition = np.zeros((self.output_size, self.output_size))
+            self.duty_cycles = np.zeros(self.output_size)
+
+    def serialize(self):
+        serialized_object = super(FeedForwardNode, self).serialize()
+
+        serialized_object['inhibition'] = self.inhibition
+        serialized_object['duty_cycles'] = self.duty_cycles
+
+        return serialized_object
 
     def generate_node_output(self, inputs):
         # if self.local_activation_radius is not None:
@@ -163,18 +225,35 @@ class SRAutoEncoderNode(FeedForwardNode):
     backpropagating errors and reconstruction errors
     """
 
-    def __init__(self, parameters):
-        super(SRAutoEncoderNode, self).__init__(parameters)
+    def __init__(self, parameters, serialized_object=None):
+        super(SRAutoEncoderNode, self).__init__(parameters, serialized_object)
 
-        self.recon_bias_lr = parameters['recon_bias_lr']
-        self.recon_biases = np.random.rand(self.inputs_size) * (self.max_weight - self.min_weight) + self.min_weight
-        self.is_transpose_reconstruction = parameters['is_transpose_reconstruction']
-        self.output_weights = self.weights.T if self.is_transpose_reconstruction \
-            else np.random.rand(self.output_size, self.inputs_size) * (self.max_weight - self.min_weight) + self.min_weight
-        self.output_local_gain = self.local_gain.T if self.is_transpose_reconstruction \
-            else np.ones((self.output_size, self.inputs_size))
-        self.prev_output_local_gain = self.prev_local_gain.T if self.is_transpose_reconstruction \
-            else np.ones((self.output_size, self.inputs_size))
+        if serialized_object is not None:
+            self.recon_biases = serialized_object['recon_biases']
+            self.output_weights = serialized_object['output_weights']
+            self.output_local_gain = serialized_object['output_local_gain']
+            self.prev_output_local_gain = serialized_object['prev_output_local_gain']
+        else:
+            self.recon_bias_lr = parameters['recon_bias_lr']
+            self.recon_biases = np.random.rand(self.inputs_size) * (self.max_weight - self.min_weight) + self.min_weight
+            self.is_transpose_reconstruction = parameters['is_transpose_reconstruction']
+            self.output_weights = self.weights.T if self.is_transpose_reconstruction \
+                else np.random.rand(self.output_size, self.inputs_size) * (self.max_weight - self.min_weight) + self.min_weight
+            self.output_local_gain = self.local_gain.T if self.is_transpose_reconstruction \
+                else np.ones((self.output_size, self.inputs_size))
+            self.prev_output_local_gain = self.prev_local_gain.T if self.is_transpose_reconstruction \
+                else np.ones((self.output_size, self.inputs_size))
+
+    def serialize(self):
+
+        serialized_object = super(SRAutoEncoderNode, self).serialize()
+
+        serialized_object['recon_biases'] = self.recon_biases
+        serialized_object['output_weights'] = self.output_weights
+        serialized_object['output_local_gain'] = self.output_local_gain
+        serialized_object['prev_output_local_gain'] = self.prev_output_local_gain
+
+        return serialized_object
 
     def generate_node_output(self, inputs):
         return super(SRAutoEncoderNode, self).generate_node_output(inputs)

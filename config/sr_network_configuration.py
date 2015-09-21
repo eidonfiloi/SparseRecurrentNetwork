@@ -340,9 +340,10 @@ def get_config():
     }
 
     params['network'] = {
-        'name': "aria_network_test.pickle",
+        'name': "aria_network",
         'verbose': verbose,
         'serialize': False,
+        'serialize_path': '../serialized_models',
         'activation_function': activation_function,
         'visualize_states': False,
         'input': {

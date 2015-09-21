@@ -12,24 +12,42 @@ class Layer(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, parameters):
+    def __init__(self, parameters, serialized_object=None):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.name = parameters['name']
+
+        if serialized_object is not None:
+            self.parameters = serialized_object['parameters']
+        else:
+            self.parameters = parameters
+
+        self.name = self.parameters['name']
+
+    def serialize(self):
+        return {'parameters': self.parameters}
 
 
 class SRLayer(Layer):
 
     """ Sparse Recurrent Layer contaning feedforward, recurrent and feedback nodes """
 
-    def __init__(self, parameters):
-        super(SRLayer, self).__init__(parameters)
+    def __init__(self, parameters, serialized_object=None):
+        super(SRLayer, self).__init__(parameters, serialized_object)
 
-        self.feedforward_node = SRAutoEncoderNode(parameters['feedforward']) if parameters['feedforward'] is not None \
-            else None
-        self.recurrent_node = SRAutoEncoderNode(parameters['recurrent']) if parameters['recurrent'] is not None \
-            else None
-        self.feedback_node = SRAutoEncoderNode(parameters['feedback']) if parameters['feedback'] is not None \
-            else None
+        if serialized_object is not None:
+            self.feedforward_node = SRAutoEncoderNode(parameters['feedforward'], serialized_object['feedforward_node']) if parameters['feedforward'] is not None \
+                else SRAutoEncoderNode(None, serialized_object['feedforward_node'])
+            self.recurrent_node = SRAutoEncoderNode(parameters['recurrent'], serialized_object['recurrent_node']) if parameters['recurrent'] is not None \
+                else SRAutoEncoderNode(None, serialized_object['recurrent_node'])
+            self.feedback_node = SRAutoEncoderNode(parameters['feedback'], serialized_object['feedback_node']) if parameters['feedback'] is not None \
+                else SRAutoEncoderNode(None, serialized_object['feedback_node'])
+
+        else:
+            self.feedforward_node = SRAutoEncoderNode(parameters['feedforward']) if parameters['feedforward'] is not None \
+                else None
+            self.recurrent_node = SRAutoEncoderNode(parameters['recurrent']) if parameters['recurrent'] is not None \
+                else None
+            self.feedback_node = SRAutoEncoderNode(parameters['feedback']) if parameters['feedback'] is not None \
+                else None
 
         self.repeat_factor = parameters['repeat_factor']
 
@@ -50,6 +68,19 @@ class SRLayer(Layer):
         self.feedback_output = None
         self.prev_feedback_input = np.zeros(self.feedback_node.inputs_size)
         self.prev_feedback_output = np.zeros(self.feedback_node.output_size)
+
+    def serialize(self):
+
+        serialized_object = super(SRLayer, self).serialize()
+
+        serialized_object['feedforward_node'] = self.feedforward_node.serialize()
+        serialized_object['feedforward'] = self.parameters['feedforward']
+        serialized_object['recurrent_node'] = self.recurrent_node.serialize()
+        serialized_object['recurrent'] = self.parameters['recurrent']
+        serialized_object['feedback_node'] = self.feedback_node.serialize()
+        serialized_object['feedback'] = self.parameters['feedback']
+
+        return serialized_object
 
     def generate_feedforward(self, inputs, activations, learning_on=True):
         self.feedforward_input = activations

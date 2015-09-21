@@ -7,6 +7,7 @@ import time
 from math import sqrt
 from utils.Utils import *
 import pickle
+import datetime
 
 __author__ = 'ptoth'
 
@@ -17,15 +18,33 @@ class Network(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, parameters):
+    def __init__(self, parameters, serialized_object=None):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.name = parameters['name']
-        self.layers = [Layer(layer_conf) for layer_conf in parameters['layers']]
+        self.parameters = parameters
+        if serialized_object is not None:
+            self.layers = [Layer(layer_params, layer_obj) for (layer_params, layer_obj) in zip(self.parameters['layers'], serialized_object['layers'])]
+            if self.parameters is None:
+                self.parameters = serialized_object['parameters']
+        else:
+            self.layers = [Layer(layer_conf) for layer_conf in self.parameters['layers']]
+        self.name = self.parameters['name']
+        self.serialize_path = self.parameters['serialize_path']
         self.num_layers = len(self.layers)
-        self.activation_function = parameters['activation_function']
-        self.verbose = parameters['verbose']
-        self.visualize_states = parameters['visualize_states']
+        self.activation_function = self.parameters['activation_function']
+        self.verbose = self.parameters['verbose']
+        self.visualize_states = self.parameters['visualize_states']
+
+    def serialize(self, path=None):
+        if path is None:
+            path = '{0}/{1}.pickle'.format(self.serialize_path, self.name)
+        layers_serialized = [layer.serialize() for layer in self.layers]
+        serialized_object = {'parameters': self.parameters, 'layers': layers_serialized, 'num_layers': self.num_layers}
+        #path = '{0}_{1}.pickle'.format(path, datetime.datetime.now().isoformat())
+        with open(path, 'wb') as f:
+            pickle.dump(serialized_object, f)
+
+        return serialized_object
 
     @abc.abstractmethod
     def run(self, inputs):
@@ -35,19 +54,18 @@ class Network(object):
         :return:
         """
 
-    def serialize(self, path):
-        with open(path, 'wb') as f:
-            pickle.dump(self, f)
-
 
 class SRNetwork(Network):
 
     """ Sparse Recurrent network"""
     
-    def __init__(self, parameters):
-        super(SRNetwork, self).__init__(parameters)
+    def __init__(self, parameters, serialized_object=None):
+        super(SRNetwork, self).__init__(parameters, serialized_object)
 
-        self.layers = [SRLayer(layer_conf) for layer_conf in parameters['layers']]
+        if serialized_object is not None:
+            self.layers = [SRLayer(layer_params, layer_obj) for (layer_params, layer_obj) in zip(self.parameters['layers'], serialized_object['layers'])]
+        else:
+            self.layers = [SRLayer(layer_conf) for layer_conf in parameters['layers']]
 
         self.feedforward_errors = {layer.name: [] for layer in self.layers}
         self.recurrent_errors = {layer.name: [] for layer in self.layers}
@@ -63,6 +81,18 @@ class SRNetwork(Network):
 
         self.previous_prediction = np.zeros(self.layers[0].feedback_node.output_size)
         self.previous_inputs = np.zeros(self.previous_prediction.shape)
+
+    def serialize(self, path=None):
+        if path is None:
+            path = '{0}/{1}.pickle'.format(self.serialize_path, self.name)
+        serialized_object = super(SRNetwork, self).serialize()
+
+        serialized_object['layers'] = [layer.serialize() for layer in self.layers]
+        #path = '{0}_{1}.pickle'.format(path, datetime.datetime.now().isoformat())
+        with open(path, 'wb') as f:
+            pickle.dump(serialized_object, f)
+
+        return serialized_object
 
     def run(self, inputs, learning_on=True):
         self.feedforward_errors = {layer.name: [] for layer in self.layers}

@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 60
+        'epochs': 40
     }
 
     verbose = 1
@@ -186,7 +186,9 @@ def get_config():
     }
 
     params['network'] = {
-        'name': "test network",
+        'name': "test_network",
+        'serialize': False,
+        'serialize_path': '../serialized_models',
         'verbose': verbose,
         'activation_function': activation_function,
         'visualize_states': False,
