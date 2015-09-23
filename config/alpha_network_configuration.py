@@ -9,6 +9,8 @@ def get_config():
         'epochs': 1
     }
 
+    update_epochs = 2
+
     verbose = 1
     activation_function = "Sigmoid"
     loss_function = "CROSS_ENTROPY"
@@ -31,6 +33,7 @@ def get_config():
     momentum = 0.5
     local_activation_radius = 0.2
     is_transpose_reconstruction = True
+    regularization = 0.0
 
     layer1 = {
         'name': "layer1",
@@ -54,6 +57,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
+            'regularization': regularization,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -78,6 +82,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
+            'regularization': regularization,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -102,6 +107,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
+            'regularization': regularization,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -131,6 +137,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase/2,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
+            'regularization': regularization,
             'weights_lr': w_lr/2,
             'inhibition_lr': inh_lr/2,
             'bias_lr': b_lr/2,
@@ -155,6 +162,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
+            'regularization': regularization,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -179,6 +187,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase/2,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
+            'regularization': regularization,
             'weights_lr': w_lr/2,
             'inhibition_lr': inh_lr/2,
             'bias_lr': b_lr/2,
@@ -208,6 +217,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase/5,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
+            'regularization': regularization,
             'weights_lr': w_lr/5,
             'inhibition_lr': inh_lr/5,
             'bias_lr': b_lr/5,
@@ -232,6 +242,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
+            'regularization': regularization,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
             'bias_lr': b_lr,
@@ -256,6 +267,7 @@ def get_config():
             'learning_rate_increase': learning_rate_increase,
             'learning_rate_decrease': learning_rate_decrease/5,
             'is_transpose_reconstruction': is_transpose_reconstruction,
+            'regularization': regularization,
             'weights_lr': w_lr/5,
             'inhibition_lr': inh_lr/5,
             'bias_lr': b_lr/5,
@@ -271,6 +283,7 @@ def get_config():
         'activation_function': "SoftMax",
         'loss_function': loss_function,
         'visualize_states': False,
+        'update_epochs': update_epochs,
         'input': {
 
         },

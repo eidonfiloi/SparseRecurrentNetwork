@@ -152,3 +152,9 @@ class SRLayer(Layer):
         self.prev_feedback_input = deepcopy(self.feedback_input)
         self.prev_feedback_output = deepcopy(self.feedback_output)
 
+    def update_layer_weights(self, num_iter):
+
+        self.feedforward_node.update_weights(num_iter)
+        self.recurrent_node.update_weights(num_iter)
+        self.feedback_node.update_weights(num_iter)
+
