@@ -11,6 +11,7 @@ def get_config():
 
     verbose = 1
     activation_function = "Sigmoid"
+    loss_function = "MSE"
     activation_threshold = 0.5
     min_w = -1.0
     max_w = 1.0
@@ -340,11 +341,12 @@ def get_config():
     }
 
     params['network'] = {
-        'name': "aria_network",
+        'name': "aria_network_10ep",
         'verbose': verbose,
-        'serialize': False,
-        'serialize_path': '../serialized_models',
+        'serialize': True,
+        'serialize_path': 'serialized_models',
         'activation_function': activation_function,
+        'loss_function': loss_function,
         'visualize_states': False,
         'input': {
 

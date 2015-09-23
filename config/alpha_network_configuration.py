@@ -6,12 +6,12 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 40
+        'epochs': 50
     }
 
     verbose = 1
     activation_function = "Sigmoid"
-    loss_function = "MSE"
+    loss_function = "CROSS_ENTROPY"
     activation_threshold = 0.5
     min_w = -1.0
     max_w = 1.0
@@ -22,29 +22,29 @@ def get_config():
     b_lr = 0.05
     r_b_lr = 0.05
     learning_rate_increase = 0.01
-    learning_rate_decrease = 0.09
+    learning_rate_decrease = 0.99
     dropout_ratio = None
-    momentum = 0.9
     zoom = 0.4
     make_sparse = False
     target_sparsity = 0.1
-    layer_repeat_factor = 5
-    local_activation_radius = None
+    layer_repeat_factor = 1
+    momentum = 0.9
+    local_activation_radius = 0.2
     is_transpose_reconstruction = True
 
     layer1 = {
         'name': "layer1",
-        'repeat_factor': 1,
+        'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer1-feedforward",
-            'inputs_size': 32,
-            'output_size': 16,
+            'inputs_size': 512,
+            'output_size': 256,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
             'max_weight': max_w,
-            'dropout_ratio': dropout_ratio,
+            'dropout_ratio': 0.1,
             'momentum': momentum,
             'local_activation_radius': local_activation_radius,
             'zoom': zoom,
@@ -52,7 +52,7 @@ def get_config():
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_increase': learning_rate_increase,
-            'learning_rate_decrease': learning_rate_decrease,
+            'learning_rate_decrease': learning_rate_decrease/2,
             'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
@@ -61,8 +61,8 @@ def get_config():
         },
         'recurrent': {
             'name': "layer1-recurrent",
-            'inputs_size': 32,
-            'output_size': 16,
+            'inputs_size': 512,
+            'output_size': 256,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -85,9 +85,9 @@ def get_config():
         },
         'feedback': {
             'name': "layer1-feedback",
-            'inputs_size': 24,
-            'output_size': 16,
-            'activation_function': activation_function,
+            'inputs_size': 512,
+            'output_size': 256,
+            'activation_function': "SoftMax",
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
@@ -96,11 +96,11 @@ def get_config():
             'momentum': momentum,
             'local_activation_radius': local_activation_radius,
             'zoom': zoom,
-            'make_sparse': make_sparse,
+            'make_sparse': False,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
             'learning_rate_increase': learning_rate_increase,
-            'learning_rate_decrease': learning_rate_decrease,
+            'learning_rate_decrease': learning_rate_decrease/2,
             'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr,
             'inhibition_lr': inh_lr,
@@ -111,11 +111,11 @@ def get_config():
 
     layer2 = {
         'name': "layer2",
-        'repeat_factor': layer_repeat_factor,
+        'repeat_factor': 1,
         'feedforward': {
             'name': "layer2-feedforward",
-            'inputs_size': 32,
-            'output_size': 16,
+            'inputs_size': 512,
+            'output_size': 128,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -128,7 +128,84 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_increase': learning_rate_increase/5,
+            'learning_rate_increase': learning_rate_increase/2,
+            'learning_rate_decrease': learning_rate_decrease,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
+            'weights_lr': w_lr/2,
+            'inhibition_lr': inh_lr/2,
+            'bias_lr': b_lr/2,
+            'recon_bias_lr': r_b_lr/2
+        },
+        'recurrent': {
+            'name': "layer2-recurrent",
+            'inputs_size': 256,
+            'output_size': 128,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
+            'lifetime_sparsity': lifetime_sparsity,
+            'min_weight': min_w,
+            'max_weight': max_w,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
+            'zoom': zoom,
+            'make_sparse': make_sparse,
+            'target_sparsity': target_sparsity,
+            'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_increase': learning_rate_increase/2,
+            'learning_rate_decrease': learning_rate_decrease,
+            'is_transpose_reconstruction': False,
+            'weights_lr': w_lr/2,
+            'inhibition_lr': inh_lr/2,
+            'bias_lr': b_lr/2,
+            'recon_bias_lr': r_b_lr/2
+        },
+        'feedback': {
+            'name': "layer2-feedback",
+            'inputs_size': 384,
+            'output_size': 256,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
+            'lifetime_sparsity': lifetime_sparsity,
+            'min_weight': min_w,
+            'max_weight': max_w,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
+            'zoom': zoom,
+            'make_sparse': make_sparse,
+            'target_sparsity': target_sparsity,
+            'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_increase': learning_rate_increase/2,
+            'learning_rate_decrease': learning_rate_decrease,
+            'is_transpose_reconstruction': is_transpose_reconstruction,
+            'weights_lr': w_lr/2,
+            'inhibition_lr': inh_lr/2,
+            'bias_lr': b_lr/2,
+            'recon_bias_lr': r_b_lr/2
+        }
+    }
+
+    layer3 = {
+        'name': "layer3",
+        'repeat_factor': 1,
+        'feedforward': {
+            'name': "layer3-feedforward",
+            'inputs_size': 256,
+            'output_size': 256,
+            'activation_function': activation_function,
+            'activation_threshold': activation_threshold,
+            'lifetime_sparsity': lifetime_sparsity,
+            'min_weight': min_w,
+            'max_weight': max_w,
+            'dropout_ratio': dropout_ratio,
+            'momentum': momentum,
+            'local_activation_radius': local_activation_radius,
+            'zoom': zoom,
+            'make_sparse': make_sparse,
+            'target_sparsity': target_sparsity,
+            'duty_cycle_decay': duty_cycle_decay,
+            'learning_rate_increase': learning_rate_increase/2,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr/5,
@@ -137,9 +214,9 @@ def get_config():
             'recon_bias_lr': r_b_lr/5
         },
         'recurrent': {
-            'name': "layer2-recurrent",
-            'inputs_size': 32,
-            'output_size': 16,
+            'name': "layer3-recurrent",
+            'inputs_size': 384,
+            'output_size': 128,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -152,18 +229,18 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_increase': learning_rate_increase/5,
+            'learning_rate_increase': learning_rate_increase/2,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
-            'weights_lr': w_lr,
-            'inhibition_lr': inh_lr,
-            'bias_lr': b_lr,
-            'recon_bias_lr': r_b_lr
+            'weights_lr': w_lr/5,
+            'inhibition_lr': inh_lr/5,
+            'bias_lr': b_lr/5,
+            'recon_bias_lr': r_b_lr/5
         },
         'feedback': {
-            'name': "layer2-feedback",
-            'inputs_size': 16,
-            'output_size': 8,
+            'name': "layer3-feedback",
+            'inputs_size': 128,
+            'output_size': 256,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -176,7 +253,7 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_increase': learning_rate_increase/5,
+            'learning_rate_increase': learning_rate_increase/2,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': is_transpose_reconstruction,
             'weights_lr': w_lr/5,
@@ -187,11 +264,11 @@ def get_config():
     }
 
     params['network'] = {
-        'name': "test_network",
-        'serialize': False,
-        'serialize_path': '../serialized_models',
+        'name': "alpha_network",
         'verbose': verbose,
-        'activation_function': activation_function,
+        'serialize': False,
+        'serialize_path': 'serialized_models',
+        'activation_function': "SoftMax",
         'loss_function': loss_function,
         'visualize_states': False,
         'input': {
@@ -200,6 +277,7 @@ def get_config():
         'layers': [
             layer1
             , layer2
+            , layer3
         ],
         'output': {
 

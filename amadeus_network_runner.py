@@ -39,7 +39,7 @@ if __name__ == "__main__":
     #     output[i] += X_mean_freq
     # save_generated_example("bach_golberg_test.wav", output, useTimeDomain=False)
 
-    input_sample = X_train_freq[0][20:45]
+    input_sample = X_train_freq[0]
     max_value = np.max(input_sample)
     input_sample /= max_value
     input_sample = (input_sample + 1.0) / 2.0
@@ -112,15 +112,13 @@ if __name__ == "__main__":
             network_output = 2.0*network_output - 1.0
             output.append(network_output * max_value)
 
-    if config['network']['serialize']:
-        with open('serialized_models/{0}'.format(network.name), 'wb') as f:
-            pickle.dump(network, f)
-        #network.serialize('serialized_models/{0}'.format(network.name))
-
     for i in xrange(len(output)):
         output[i] *= X_var_freq
         output[i] += X_mean_freq
     save_generated_example("bach_goldberg_aria_10.wav", output, useTimeDomain=False)
+
+    if config['network']['serialize']:
+        network.serialize()
 
     plt.ioff()
     plt.subplot(4, 1, 1)

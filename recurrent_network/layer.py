@@ -1,7 +1,8 @@
-from Node import *
-import logging
+from copy import deepcopy
 import abc
-from copy import copy
+import logging
+
+from Node import *
 
 __author__ = 'ptoth'
 
@@ -28,25 +29,31 @@ class Layer(object):
 
 class SRLayer(Layer):
 
-    """ Sparse Recurrent Layer contaning feedforward, recurrent and feedback nodes """
+    """ Sparse Recurrent Layer containing feedforward, recurrent and feedback nodes """
 
     def __init__(self, parameters, serialized_object=None):
         super(SRLayer, self).__init__(parameters, serialized_object)
 
         if serialized_object is not None:
-            self.feedforward_node = SRAutoEncoderNode(parameters['feedforward'], serialized_object['feedforward_node']) if parameters['feedforward'] is not None \
+            self.feedforward_node = SRAutoEncoderNode(parameters['feedforward'], serialized_object['feedforward_node']) \
+                if parameters['feedforward'] is not None \
                 else SRAutoEncoderNode(None, serialized_object['feedforward_node'])
-            self.recurrent_node = SRAutoEncoderNode(parameters['recurrent'], serialized_object['recurrent_node']) if parameters['recurrent'] is not None \
+            self.recurrent_node = SRAutoEncoderNode(parameters['recurrent'], serialized_object['recurrent_node']) \
+                if parameters['recurrent'] is not None \
                 else SRAutoEncoderNode(None, serialized_object['recurrent_node'])
-            self.feedback_node = SRAutoEncoderNode(parameters['feedback'], serialized_object['feedback_node']) if parameters['feedback'] is not None \
+            self.feedback_node = SRAutoEncoderNode(parameters['feedback'], serialized_object['feedback_node']) \
+                if parameters['feedback'] is not None \
                 else SRAutoEncoderNode(None, serialized_object['feedback_node'])
 
         else:
-            self.feedforward_node = SRAutoEncoderNode(parameters['feedforward']) if parameters['feedforward'] is not None \
+            self.feedforward_node = SRAutoEncoderNode(parameters['feedforward']) \
+                if parameters['feedforward'] is not None \
                 else None
-            self.recurrent_node = SRAutoEncoderNode(parameters['recurrent']) if parameters['recurrent'] is not None \
+            self.recurrent_node = SRAutoEncoderNode(parameters['recurrent']) \
+                if parameters['recurrent'] is not None \
                 else None
-            self.feedback_node = SRAutoEncoderNode(parameters['feedback']) if parameters['feedback'] is not None \
+            self.feedback_node = SRAutoEncoderNode(parameters['feedback']) \
+                if parameters['feedback'] is not None \
                 else None
 
         self.repeat_factor = parameters['repeat_factor']
@@ -109,9 +116,9 @@ class SRLayer(Layer):
 
     def generate_feedback(self, inputs, activations, learning_on=True):
         self.feedback_input = activations
+        error = None
         for i in range(self.repeat_factor):
             self.feedback_output = self.feedback_node.generate_node_output(inputs)
-            error = None
             if learning_on:
                 error = self.feedback_node.learn_reconstruction(inputs,
                                                                 self.feedback_output,
@@ -144,60 +151,4 @@ class SRLayer(Layer):
 
         self.prev_feedback_input = deepcopy(self.feedback_input)
         self.prev_feedback_output = deepcopy(self.feedback_output)
-
-
-class SRLayerOld(Layer):
-
-    def __init__(self, parameters):
-        super(SRLayerOld, self).__init__()
-
-        self.feedforward_node = SRAutoEncoderOld(parameters['feedforward'])
-        self.recurrent_node = SRAutoEncoderOld(parameters['recurrent'])
-        self.feedback_node = SRAutoEncoderOld(parameters['feedback'])
-
-        self.repeat_factor = parameters['repeat_factor']
-
-        self.feedforward_sdr = np.zeros(self.feedforward_node.sdr_size)
-        self.recurrent_sdr = np.zeros(self.recurrent_node.sdr_size)
-        self.feedback_sdr = np.zeros(self.feedback_node.sdr_size)
-        self.prev_recurrent_sdr = np.zeros(self.recurrent_node.sdr_size)
-        self.prev_feedback_sdr = np.zeros(self.feedback_node.sdr_size)
-        self.cur_layer_input = np.zeros(self.feedforward_node.num_inputs)
-        self.prev_output = np.zeros
-        self.cur_layer_hidden_output = np.zeros(self.feedforward_node.sdr_size)
-        self.prev_layer_hidden_output = np.zeros(self.feedforward_node.sdr_size)
-
-    def generate_feedforward(self, inputs):
-        self.cur_layer_input = inputs
-        error = None
-        for i in range(self.repeat_factor):
-            self.feedforward_sdr = self.feedforward_node.generate_node_output(inputs)
-            error = self.feedforward_node.learn(inputs, self.feedforward_sdr)
-        return self.feedforward_sdr, error
-
-    def generate_recurrent(self, inputs, learning_on=True):
-        next_prev_recurrent_sdr = None
-        error = None
-        for i in range(self.repeat_factor):
-            next_prev_recurrent_sdr = self.recurrent_node.generate_node_output(self.feedforward_sdr)
-            error = self.recurrent_node.learn(self.feedforward_sdr, self.prev_recurrent_sdr) \
-                if learning_on else None
-        self.prev_recurrent_sdr = next_prev_recurrent_sdr
-        return next_prev_recurrent_sdr, error
-
-    def generate_feedback(self, inputs, learning_on=True):
-        error = None
-        for i in range(self.repeat_factor):
-            self.feedback_sdr = self.feedback_node.generate_node_output(inputs)
-            error = self.feedback_node.learn(self.cur_layer_input, self.prev_feedback_sdr) \
-                if learning_on else None
-        self.prev_feedback_sdr = self.feedback_sdr
-        return self.feedback_sdr, error
-
-    def generate_output(self, inputs, learning_on=True):
-        result = self.feedforward_node.reconstruct(inputs)
-        output_error = self.feedforward_node.learn(self.cur_layer_input, self.prev_layer_hidden_output) \
-            if learning_on else None
-        self.prev_layer_hidden_output = inputs
-        return result, output_error
 
