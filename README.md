@@ -8,7 +8,7 @@ SparseRecurrentNetwork is an experimental framework for developing and testing d
 * dropout and inhibition
 * audio and text input preprocessers
 
-It is written in Python to provide easy, simple testing-developing cycles (parallelization and cluster deployment is currently WIP as well as development in Scala/Spark).
+It is written in Python to provide easy, simple developing-testing cycles (parallelization and cluster deployment is currently WIP as well as development in Scala/Spark). It is part of [ReCog Technologies]([Learn Markdown](http://recog-technologies.com)
 
 ## **Simplified Architecture Visualizations** ##
 
