@@ -37,6 +37,8 @@ class Network(object):
         self.loss_function = self.parameters['loss_function']
         self.verbose = self.parameters['verbose']
         self.visualize_states = self.parameters['visualize_states']
+        self.update_epochs = self.parameters['update_epochs']
+        self.update_epochs_counter = 0
 
     def serialize(self, path=None):
         if path is None:
@@ -117,6 +119,13 @@ class SRNetwork(Network):
             self.visualize_hidden_states(self.feedforward_outputs, self.recurrent_outputs)
         for l in self.layers:
                 l.cleanup_layer()
+
+        if self.update_epochs_counter == self.update_epochs:
+            for l in self.layers:
+                l.update_layer_weights(self.update_epochs)
+            self.update_epochs_counter = 0
+        else:
+            self.update_epochs_counter += 1
 
         return prediction, output_error
 

@@ -74,12 +74,16 @@ class Node(object):
             self.weights = np.random.rand(self.inputs_size, self.output_size) * \
                 (self.max_weight - self.min_weight) + self.min_weight
             self.biases = np.random.rand(self.output_size) * (self.max_weight - self.min_weight) + self.min_weight
+
             self.activations = np.zeros(self.output_size)
             self.sdr = np.ones(self.output_size)
             self.learning_rate_increase = parameters['learning_rate_increase']
             self.learning_rate_decrease = parameters['learning_rate_decrease']
             self.local_gain = np.ones((self.inputs_size, self.output_size))
             self.prev_local_gain = np.ones((self.inputs_size, self.output_size))
+        self.delta_weights = np.zeros((self.inputs_size, self.output_size))
+        self.delta_biases = np.zeros(self.output_size)
+        self.regularization = self.parameters['regularization']
 
     def serialize(self):
 
@@ -176,10 +180,13 @@ class FeedForwardNode(Node):
             if self.momentum is not None:
                 self.velocity[i] = self.momentum * self.velocity[i] + self.weights_lr * inputs[i] \
                     * (self.local_gain[i] * delta_)
-                self.weights[i] -= self.velocity[i]
+                self.delta_weights[i] += self.velocity[i]
+                # self.weights[i] -= self.velocity[i]
             else:
-                self.weights[i] -= self.weights_lr * inputs[i] * (self.local_gain[i] * delta_)
-            self.biases -= self.bias_lr * delta_
+                # self.weights[i] -= self.weights_lr * inputs[i] * (self.local_gain[i] * delta_)
+                self.delta_weights[i] += self.weights_lr * inputs[i] * (self.local_gain[i] * delta_)
+        # self.biases -= self.bias_lr * delta_
+        self.delta_biases += self.bias_lr * delta_
 
         if self.learning_rate_increase is not None:
             gradient_change = (np.multiply(self.prev_local_gain, self.local_gain) > 0.0).astype('int')
@@ -189,6 +196,14 @@ class FeedForwardNode(Node):
             self.local_gain = gain_increase + gain_decrease
 
         return delta_backpropagate
+
+    def update_weights(self, num_iter):
+
+        self.weights -= ((1.0 / num_iter) * self.delta_weights + self.weights_lr * self.regularization * self.weights)
+        self.biases -= (1.0 / num_iter) * self.delta_biases
+
+        self.delta_weights = np.zeros(self.delta_weights.shape)
+        self.delta_biases = np.zeros(self.delta_biases.shape)
 
 
 class SRAutoEncoderNode(FeedForwardNode):
@@ -249,7 +264,7 @@ class SRAutoEncoderNode(FeedForwardNode):
 
         for i in range(0, self.output_weights.shape[0]):
             self.output_weights[i] -= self.weights_lr * hidden[i] * (recon_delta * self.output_local_gain[i])
-            self.recon_biases -= self.recon_bias_lr * recon_delta
+        self.recon_biases -= self.recon_bias_lr * recon_delta
 
         if self.learning_rate_increase is not None:
             gradient_change = (np.multiply(self.prev_output_local_gain, self.output_local_gain) > 0.0).astype('int')

@@ -110,7 +110,7 @@ class SRLayer(Layer):
                 error = self.recurrent_node.learn_reconstruction(inputs,
                                                                  self.prev_recurrent_output,
                                                                  input_target=self.prev_recurrent_input,
-                                                                 backpropagate_hidden=False)
+                                                                 backpropagate_hidden=True)
         self.recurrent_output_activations = self.recurrent_node.activations
         return self.recurrent_output, error
 
@@ -122,7 +122,7 @@ class SRLayer(Layer):
             if learning_on:
                 error = self.feedback_node.learn_reconstruction(inputs,
                                                                 self.feedback_output,
-                                                                backpropagate_hidden=False)
+                                                                backpropagate_hidden=True)
         return self.feedback_output, self.feedback_node.activations, error
 
     def backpropagate_feedback(self, delta):
@@ -151,4 +151,10 @@ class SRLayer(Layer):
 
         self.prev_feedback_input = deepcopy(self.feedback_input)
         self.prev_feedback_output = deepcopy(self.feedback_output)
+
+    def update_layer_weights(self, num_iter):
+
+        self.feedforward_node.update_weights(num_iter)
+        self.recurrent_node.update_weights(num_iter)
+        self.feedback_node.update_weights(num_iter)
 
