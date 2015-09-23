@@ -10,7 +10,7 @@ SparseRecurrentNetwork is an experimental framework for developing and testing d
 
 It is written in Python to provide easy, simple testing-developing cycles (parallelization and cluster deployment is currently WIP as well as development in Scala/Spark).
 
-## **Architecture** ##
+## **Simplified Architecture Visualizations** ##
 
 ### Network architecture ###
 ![alt tag](https://cloud.githubusercontent.com/assets/2136696/10036936/9a4d3ef4-61d8-11e5-8023-e5629d6c158b.jpg)
