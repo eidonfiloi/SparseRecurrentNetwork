@@ -152,13 +152,13 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_increase': learning_rate_increase/2,
+            'learning_rate_increase': learning_rate_increase,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
-            'weights_lr': w_lr/2,
-            'inhibition_lr': inh_lr/2,
-            'bias_lr': b_lr/2,
-            'recon_bias_lr': r_b_lr/2
+            'weights_lr': w_lr,
+            'inhibition_lr': inh_lr,
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'feedback': {
             'name': "layer2-feedback",
@@ -229,13 +229,13 @@ def get_config():
             'make_sparse': make_sparse,
             'target_sparsity': target_sparsity,
             'duty_cycle_decay': duty_cycle_decay,
-            'learning_rate_increase': learning_rate_increase/5,
+            'learning_rate_increase': learning_rate_increase,
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
-            'weights_lr': w_lr/5,
-            'inhibition_lr': inh_lr/5,
-            'bias_lr': b_lr/5,
-            'recon_bias_lr': r_b_lr/5
+            'weights_lr': w_lr,
+            'inhibition_lr': inh_lr,
+            'bias_lr': b_lr,
+            'recon_bias_lr': r_b_lr
         },
         'feedback': {
             'name': "layer3-feedback",

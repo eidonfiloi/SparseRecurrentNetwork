@@ -22,7 +22,7 @@ def get_config():
     b_lr = 0.05
     r_b_lr = 0.05
     learning_rate_increase = 0.01
-    learning_rate_decrease = 0.09
+    learning_rate_decrease = 0.99
     dropout_ratio = None
     momentum = 0.9
     zoom = 0.4

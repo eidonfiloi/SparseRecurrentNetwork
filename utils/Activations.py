@@ -24,7 +24,7 @@ class Activations(object):
 
     @staticmethod
     def softmax_derivative(x):
-        return expit(x)
+        return x*(1.0-x)
 
     @staticmethod
     def sigmoid_activation(x):
@@ -58,7 +58,7 @@ class Activations(object):
         elif activation_function == "SoftPlus":
             return Activations.softplus_derivative(x)
         elif activation_function == "SoftMax":
-            return 1.0
+            return Activations.softmax_derivative(x)
         else:
             return Activations.sigmoid_derivative(x)
 

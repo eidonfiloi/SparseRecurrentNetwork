@@ -20,7 +20,8 @@ class Loss(object):
     def delta_backpropagate(pred, target, loss_function="MSE", activation_function="Sigmoid"):
 
         if loss_function == "CROSS_ENTROPY" and activation_function == "SoftMax":
-            return pred - target
+            res = pred - target
+            return res
         else:
             return Loss.delta(pred, target, loss_function) * Activations.derivative(pred, activation_function)
 
@@ -29,7 +30,7 @@ class Loss(object):
         if loss_function == "MSE":
             return sqrt(np.mean(np.abs(Loss.delta(pred, target, loss_function)) ** 2, axis=0))
         elif loss_function == "CROSS_ENTROPY":
-            return np.sum(-np.log(pred)*target)
+            return -np.sum(np.log(pred)*target)
         else:
             return sqrt(np.mean(np.abs(Loss.delta(pred, target, loss_function)) ** 2, axis=0))
 

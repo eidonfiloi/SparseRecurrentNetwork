@@ -122,7 +122,7 @@ class SRLayer(Layer):
             if learning_on:
                 error = self.feedback_node.learn_reconstruction(inputs,
                                                                 self.feedback_output,
-                                                                backpropagate_hidden=True)
+                                                                backpropagate_hidden=False)
         return self.feedback_output, self.feedback_node.activations, error
 
     def backpropagate_feedback(self, delta):
