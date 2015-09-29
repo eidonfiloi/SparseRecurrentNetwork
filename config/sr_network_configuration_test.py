@@ -9,7 +9,7 @@ def get_config():
         'epochs': 70
     }
 
-    update_epochs = 3
+    update_epochs = 1
 
     verbose = 1
     activation_function = "Sigmoid"
@@ -34,12 +34,14 @@ def get_config():
     local_activation_radius = None
     is_transpose_reconstruction = True
     regularization = 0.0
+    node_type = "SRAutoEncoderNode"
 
     layer1 = {
         'name': "layer1",
         'repeat_factor': 1,
         'feedforward': {
             'name': "layer1-feedforward",
+            'node_type': node_type,
             'inputs_size': 32,
             'output_size': 16,
             'activation_function': activation_function,
@@ -65,6 +67,7 @@ def get_config():
         },
         'recurrent': {
             'name': "layer1-recurrent",
+            'node_type': node_type,
             'inputs_size': 32,
             'output_size': 16,
             'activation_function': activation_function,
@@ -90,6 +93,7 @@ def get_config():
         },
         'feedback': {
             'name': "layer1-feedback",
+            'node_type': node_type,
             'inputs_size': 24,
             'output_size': 16,
             'activation_function': activation_function,
@@ -120,6 +124,7 @@ def get_config():
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer2-feedforward",
+            'node_type': node_type,
             'inputs_size': 32,
             'output_size': 16,
             'activation_function': activation_function,
@@ -145,6 +150,7 @@ def get_config():
         },
         'recurrent': {
             'name': "layer2-recurrent",
+            'node_type': node_type,
             'inputs_size': 32,
             'output_size': 16,
             'activation_function': activation_function,
@@ -163,13 +169,14 @@ def get_config():
             'learning_rate_decrease': learning_rate_decrease,
             'is_transpose_reconstruction': False,
             'regularization': regularization,
-            'weights_lr': w_lr,
-            'inhibition_lr': inh_lr,
-            'bias_lr': b_lr,
-            'recon_bias_lr': r_b_lr
+            'weights_lr': w_lr/5,
+            'inhibition_lr': inh_lr/5,
+            'bias_lr': b_lr/5,
+            'recon_bias_lr': r_b_lr/5
         },
         'feedback': {
             'name': "layer2-feedback",
+            'node_type': node_type,
             'inputs_size': 16,
             'output_size': 8,
             'activation_function': activation_function,

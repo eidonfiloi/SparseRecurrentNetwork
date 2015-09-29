@@ -1,6 +1,7 @@
 from copy import deepcopy
 import abc
 import logging
+import importlib
 
 from Node import *
 
@@ -26,6 +27,9 @@ class Layer(object):
     def serialize(self):
         return {'parameters': self.parameters}
 
+    def __getstate__(self):
+        return self.serialize()
+
 
 class SRLayer(Layer):
 
@@ -34,25 +38,32 @@ class SRLayer(Layer):
     def __init__(self, parameters, serialized_object=None):
         super(SRLayer, self).__init__(parameters, serialized_object)
 
+        module = importlib.import_module(Node.__module__)
         if serialized_object is not None:
-            self.feedforward_node = SRAutoEncoderNode(parameters['feedforward'], serialized_object['feedforward_node']) \
+            class_ = getattr(module, parameters['feedforward']['node_type'])
+            self.feedforward_node = class_(parameters['feedforward'], serialized_object['feedforward_node']) \
                 if parameters['feedforward'] is not None \
-                else SRAutoEncoderNode(None, serialized_object['feedforward_node'])
-            self.recurrent_node = SRAutoEncoderNode(parameters['recurrent'], serialized_object['recurrent_node']) \
+                else class_(None, serialized_object['feedforward_node'])
+            class_ = getattr(module, parameters['recurrent']['node_type'])
+            self.recurrent_node = class_(parameters['recurrent'], serialized_object['recurrent_node']) \
                 if parameters['recurrent'] is not None \
-                else SRAutoEncoderNode(None, serialized_object['recurrent_node'])
-            self.feedback_node = SRAutoEncoderNode(parameters['feedback'], serialized_object['feedback_node']) \
+                else class_(None, serialized_object['recurrent_node'])
+            class_ = getattr(module, parameters['feedback']['node_type'])
+            self.feedback_node = class_(parameters['feedback'], serialized_object['feedback_node']) \
                 if parameters['feedback'] is not None \
-                else SRAutoEncoderNode(None, serialized_object['feedback_node'])
+                else class_(None, serialized_object['feedback_node'])
 
         else:
-            self.feedforward_node = SRAutoEncoderNode(parameters['feedforward']) \
+            class_ = getattr(module, parameters['feedforward']['node_type'])
+            self.feedforward_node = class_(parameters['feedforward']) \
                 if parameters['feedforward'] is not None \
                 else None
-            self.recurrent_node = SRAutoEncoderNode(parameters['recurrent']) \
+            class_ = getattr(module, parameters['recurrent']['node_type'])
+            self.recurrent_node = class_(parameters['recurrent']) \
                 if parameters['recurrent'] is not None \
                 else None
-            self.feedback_node = SRAutoEncoderNode(parameters['feedback']) \
+            class_ = getattr(module, parameters['feedback']['node_type'])
+            self.feedback_node = class_(parameters['feedback']) \
                 if parameters['feedback'] is not None \
                 else None
 
@@ -89,12 +100,15 @@ class SRLayer(Layer):
 
         return serialized_object
 
+    def __getstate__(self):
+        return self.serialize()
+
     def generate_feedforward(self, inputs, activations, learning_on=True):
         self.feedforward_input = activations
         for i in range(self.repeat_factor):
             self.feedforward_output = self.feedforward_node.generate_node_output(inputs)
             error = None
-            if learning_on:
+            if learning_on and self.parameters['feedforward']['node_type'] == "SRAutoEncoderNode":
                 error = self.feedforward_node.learn_reconstruction(inputs,
                                                                    self.feedforward_output,
                                                                    backpropagate_hidden=True)
@@ -106,11 +120,11 @@ class SRLayer(Layer):
         error = None
         for i in range(self.repeat_factor):
             self.recurrent_output = self.recurrent_node.generate_node_output(inputs)
-            if learning_on:
+            if learning_on and self.parameters['recurrent']['node_type'] == "SRAutoEncoderNode":
                 error = self.recurrent_node.learn_reconstruction(inputs,
                                                                  self.prev_recurrent_output,
                                                                  input_target=self.prev_recurrent_input,
-                                                                 backpropagate_hidden=True)
+                                                                 backpropagate_hidden=False)
         self.recurrent_output_activations = self.recurrent_node.activations
         return self.recurrent_output, error
 
@@ -119,7 +133,7 @@ class SRLayer(Layer):
         error = None
         for i in range(self.repeat_factor):
             self.feedback_output = self.feedback_node.generate_node_output(inputs)
-            if learning_on:
+            if learning_on and self.parameters['feedback']['node_type'] == "SRAutoEncoderNode":
                 error = self.feedback_node.learn_reconstruction(inputs,
                                                                 self.feedback_output,
                                                                 backpropagate_hidden=True)

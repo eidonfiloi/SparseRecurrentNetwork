@@ -6,6 +6,7 @@ from recurrent_network.Network import *
 import config.sr_network_configuration as base_config
 from data_io.audio_data_utils import *
 import pickle
+from copy import copy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +29,14 @@ if __name__ == "__main__":
 
     config = base_config.get_config()
 
-    network = SRNetwork(config['network'])
+    load_model = False
+
+    if load_model:
+        with open('serialized_models/aria_network_10ep.pickle', "rb") as f:
+            network_data = pickle.load(f)
+            network = SRNetwork(config['network'], network_data)
+    else:
+        network = SRNetwork(config['network'])
 
     # input_sample = X_train_freq[0]
     # output = []
@@ -39,7 +47,7 @@ if __name__ == "__main__":
     #     output[i] += X_mean_freq
     # save_generated_example("bach_golberg_test.wav", output, useTimeDomain=False)
 
-    input_sample = X_train_freq[0]
+    input_sample = X_train_freq[1]
     max_value = np.max(input_sample)
     input_sample /= max_value
     input_sample = (input_sample + 1.0) / 2.0

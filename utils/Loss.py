@@ -20,8 +20,7 @@ class Loss(object):
     def delta_backpropagate(pred, target, loss_function="MSE", activation_function="Sigmoid"):
 
         if loss_function == "CROSS_ENTROPY" and activation_function == "SoftMax":
-            res = pred - target
-            return res
+            return pred - target
         else:
             return Loss.delta(pred, target, loss_function) * Activations.derivative(pred, activation_function)
 

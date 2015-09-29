@@ -7,8 +7,14 @@ import config.alpha_network_configuration as base_config
 
 _LOGGER = logging.getLogger(__name__)
 
-_CHARS_ONE_HOT = (0.05 / 255) * np.ones((256, 256))
-np.fill_diagonal(_CHARS_ONE_HOT, 0.95) #np.eye(256, 256)
+# np.eye(256, 256)
+_CHARS_ONE_HOT = np.eye(256, 256) # 0.1*np.ones((256, 256))
+
+# for i in range(_CHARS_ONE_HOT.shape[0]):
+#     _CHARS_ONE_HOT[i][i:min(i+10, 255)] = 0.9
+
+# (0.05 / 255) * np.ones((256, 256))
+# np.fill_diagonal(_CHARS_ONE_HOT, 0.95)
 
 
 def one_hot_decode(arr):
@@ -18,7 +24,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    text_data_path = 'data_prepared/dickens_twocities.txt' #"data_prepared/text_test.txt" #"data_prepared/wiki_100k.txt"
+    text_data_path = 'data_prepared/text_test.txt' #"data_prepared/text_test.txt" #"data_prepared/wiki_100k.txt"
 
     params = base_config.get_config()
     network = SRNetwork(params['network'])
@@ -34,7 +40,7 @@ if __name__ == "__main__":
     for j in range(epochs):
         with open(text_data_path, 'rb') as f:
             for i, line in enumerate(f):
-                if i < 5000:
+                if i < 5000 or True:
                     print '######################### line {0}'.format(i)
                     arr = [ord(ch) for ch in list(line)]
                     output_arr = []
@@ -58,8 +64,8 @@ if __name__ == "__main__":
                               'output_error: {4}'.format(j, i, chr(el), prev_pred_ch, mse)
                             plt.ion()
                             plt.axis([-1, 16, -1, 16])
-                            x_r, y_r = np.argwhere(inp.reshape(16, 16) >= 0.95).T
-                            x_t, y_t = np.argwhere(prev_pred_vector.reshape(16, 16) >= 0.95).T
+                            x_r, y_r = np.argwhere(inp.reshape(16, 16) >= 0.9).T
+                            x_t, y_t = np.argwhere(prev_pred_vector.reshape(16, 16) >= 0.9).T
                             plt.scatter(x_r, y_r, alpha=0.5, c='r', marker='s', s=255)
                             plt.scatter(x_t, y_t, alpha=0.5, c='b', marker='o', s=245)
                             plt.draw()
@@ -68,7 +74,7 @@ if __name__ == "__main__":
                         prev_pred = copy(pred)
                     _LOGGER.info('################### input line: {0}'.format(line))
                     _LOGGER.info('################### output line: {0}'.format(''.join(output_arr)))
-                    output_preds.append(''.join(output_arr))
+                    # output_preds.append(''.join(output_arr))
                     for key, v in network.feedforward_errors.items():
                         if len(v) > 0:
                             feedforward_errors[key].append(v[0])

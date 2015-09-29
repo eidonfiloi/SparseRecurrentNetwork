@@ -9,8 +9,12 @@ class BaseTest(unittest.TestCase):
 
     def test_np(self):
         arr = np.array([1.0, 2.0, 3.0])
+        arr2 = np.array([1.0, 2.0])
 
-        print arr * (1.0 - arr)
+
+        print np.matrix(arr2).T
+
+        print np.dot(np.matrix(arr).T, np.matrix(arr2))
 
     def iterator_test(self):
 

@@ -40,15 +40,23 @@ class Network(object):
         self.update_epochs = self.parameters['update_epochs']
         self.update_epochs_counter = 0
 
-    def serialize(self, path=None):
+    def serialize(self, path=None, save=True):
         if path is None:
             path = '{0}/{1}.pickle'.format(self.serialize_path, self.name)
         layers_serialized = [layer.serialize() for layer in self.layers]
         serialized_object = {'parameters': self.parameters, 'layers': layers_serialized, 'num_layers': self.num_layers}
-        with open(path, 'wb') as f:
-            pickle.dump(serialized_object, f)
+        if save:
+            with open(path, 'wb') as f:
+                pickle.dump(serialized_object, f)
 
         return serialized_object
+
+    def __getstate__(self):
+        return self.serialize(save=False)
+
+    def __setstate__(self, dict):
+        self.__init__()
+
 
     @abc.abstractmethod
     def run(self, inputs):
