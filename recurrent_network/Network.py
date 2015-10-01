@@ -19,17 +19,11 @@ class Network(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, parameters, serialized_object=None):
+    def __init__(self, parameters):
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.parameters = parameters
-        if serialized_object is not None:
-            self.layers = [Layer(layer_params, layer_obj) for (layer_params, layer_obj)
-                           in zip(self.parameters['layers'], serialized_object['layers'])]
-            if self.parameters is None:
-                self.parameters = serialized_object['parameters']
-        else:
-            self.layers = [Layer(layer_conf) for layer_conf in self.parameters['layers']]
+        self.layers = [Layer(layer_conf) for layer_conf in self.parameters['layers']]
         self.name = self.parameters['name']
         self.serialize_path = self.parameters['serialize_path']
         self.num_layers = len(self.layers)
@@ -44,7 +38,7 @@ class Network(object):
         if path is None:
             path = '{0}/{1}.pickle'.format(self.serialize_path, self.name)
         layers_serialized = [layer.serialize() for layer in self.layers]
-        serialized_object = {'parameters': self.parameters, 'layers': layers_serialized, 'num_layers': self.num_layers}
+        serialized_object = {'layers': layers_serialized}
         if save:
             with open(path, 'wb') as f:
                 pickle.dump(serialized_object, f)
@@ -52,10 +46,11 @@ class Network(object):
         return serialized_object
 
     def __getstate__(self):
-        return self.serialize(save=False)
+        return {'layers': self.layers}
 
     def __setstate__(self, dict):
-        self.__init__()
+        self.layers = dict['layers']
+        self.logger = logging.getLogger(self.__class__.__name__)
 
 
     @abc.abstractmethod
@@ -71,15 +66,31 @@ class SRNetwork(Network):
 
     """ Sparse Recurrent network"""
     
-    def __init__(self, parameters, serialized_object=None):
-        super(SRNetwork, self).__init__(parameters, serialized_object)
+    def __init__(self, parameters):
+        super(SRNetwork, self).__init__(parameters)
 
-        if serialized_object is not None:
-            self.layers = [SRLayer(layer_params, layer_obj) for (layer_params, layer_obj)
-                           in zip(self.parameters['layers'], serialized_object['layers'])]
-        else:
-            self.layers = [SRLayer(layer_conf) for layer_conf in parameters['layers']]
+        self.layers = [SRLayer(layer_conf) for layer_conf in parameters['layers']]
+        self.feedforward_errors = {layer.name: [] for layer in self.layers}
+        self.recurrent_errors = {layer.name: [] for layer in self.layers}
+        self.feedback_errors = {layer.name: [] for layer in self.layers}
 
+        self.feedforward_outputs = {layer.name: [] for layer in self.layers}
+        self.recurrent_outputs = {layer.name: [] for layer in self.layers}
+        self.feedback_outputs = {layer.name: [] for layer in self.layers}
+
+        self.feedforward_deltas = {layer.name: [] for layer in self.layers}
+        self.recurrent_deltas = {layer.name: [] for layer in self.layers}
+        self.feedback_deltas = {layer.name: [] for layer in self.layers}
+
+        self.previous_prediction = np.zeros(self.layers[0].feedback_node.output_size)
+        self.previous_inputs = np.zeros(self.previous_prediction.shape)
+
+    def __getstate__(self):
+        parent_state = Network.__getstate__(self)
+        return parent_state
+
+    def __setstate(self, dict):
+        self.layers = dict['layers']
         self.feedforward_errors = {layer.name: [] for layer in self.layers}
         self.recurrent_errors = {layer.name: [] for layer in self.layers}
         self.feedback_errors = {layer.name: [] for layer in self.layers}
@@ -215,6 +226,9 @@ class SRNetwork(Network):
                     rec_delta_backpropagate = layer_backprop.backpropagate_recurrent(rec_delta)
                     self.recurrent_deltas[layer_backprop.name].append(rec_delta_backpropagate)
                     delta_backpropagate = back_delta
+
+    def collect_network_deltas(self):
+        return [layer.collect_layer_deltas() for layer in self.layers]
 
     def visualize_hidden_states(self, feedforward_sdrs, recurrent_sdrs):
         plt.ion()

@@ -6,10 +6,10 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 10
+        'epochs': 1
     }
 
-    update_epochs = 10
+    update_epochs = 1
 
     verbose = 1
     activation_function = "Sigmoid"

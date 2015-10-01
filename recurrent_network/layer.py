@@ -14,58 +14,36 @@ class Layer(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, parameters, serialized_object=None):
+    def __init__(self, parameters):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        if serialized_object is not None:
-            self.parameters = serialized_object['parameters']
-        else:
-            self.parameters = parameters
-
+        self.parameters = parameters
         self.name = self.parameters['name']
 
     def serialize(self):
         return {'parameters': self.parameters}
-
-    def __getstate__(self):
-        return self.serialize()
 
 
 class SRLayer(Layer):
 
     """ Sparse Recurrent Layer containing feedforward, recurrent and feedback nodes """
 
-    def __init__(self, parameters, serialized_object=None):
-        super(SRLayer, self).__init__(parameters, serialized_object)
+    def __init__(self, parameters):
+        super(SRLayer, self).__init__(parameters)
 
         module = importlib.import_module(Node.__module__)
-        if serialized_object is not None:
-            class_ = getattr(module, parameters['feedforward']['node_type'])
-            self.feedforward_node = class_(parameters['feedforward'], serialized_object['feedforward_node']) \
-                if parameters['feedforward'] is not None \
-                else class_(None, serialized_object['feedforward_node'])
-            class_ = getattr(module, parameters['recurrent']['node_type'])
-            self.recurrent_node = class_(parameters['recurrent'], serialized_object['recurrent_node']) \
-                if parameters['recurrent'] is not None \
-                else class_(None, serialized_object['recurrent_node'])
-            class_ = getattr(module, parameters['feedback']['node_type'])
-            self.feedback_node = class_(parameters['feedback'], serialized_object['feedback_node']) \
-                if parameters['feedback'] is not None \
-                else class_(None, serialized_object['feedback_node'])
-
-        else:
-            class_ = getattr(module, parameters['feedforward']['node_type'])
-            self.feedforward_node = class_(parameters['feedforward']) \
-                if parameters['feedforward'] is not None \
-                else None
-            class_ = getattr(module, parameters['recurrent']['node_type'])
-            self.recurrent_node = class_(parameters['recurrent']) \
-                if parameters['recurrent'] is not None \
-                else None
-            class_ = getattr(module, parameters['feedback']['node_type'])
-            self.feedback_node = class_(parameters['feedback']) \
-                if parameters['feedback'] is not None \
-                else None
+        class_ = getattr(module, parameters['feedforward']['node_type'])
+        self.feedforward_node = class_(parameters['feedforward']) \
+            if parameters['feedforward'] is not None \
+            else None
+        class_ = getattr(module, parameters['recurrent']['node_type'])
+        self.recurrent_node = class_(parameters['recurrent']) \
+            if parameters['recurrent'] is not None \
+            else None
+        class_ = getattr(module, parameters['feedback']['node_type'])
+        self.feedback_node = class_(parameters['feedback']) \
+            if parameters['feedback'] is not None \
+            else None
 
         self.repeat_factor = parameters['repeat_factor']
 
@@ -92,16 +70,20 @@ class SRLayer(Layer):
         serialized_object = super(SRLayer, self).serialize()
 
         serialized_object['feedforward_node'] = self.feedforward_node.serialize()
-        serialized_object['feedforward'] = self.parameters['feedforward']
         serialized_object['recurrent_node'] = self.recurrent_node.serialize()
-        serialized_object['recurrent'] = self.parameters['recurrent']
         serialized_object['feedback_node'] = self.feedback_node.serialize()
-        serialized_object['feedback'] = self.parameters['feedback']
 
         return serialized_object
 
     def __getstate__(self):
-        return self.serialize()
+        return {'feedforward_node': self.feedforward_node,
+                'recurrent_node': self.recurrent_node,
+                'feedback_node': self.feedback_node}
+
+    def __setstate(self, dict):
+        self.feedforward_node = dict['feedforward_node']
+        self.recurrent_node = dict['recurrent_node']
+        self.feedback_node = dict['feedback_node']
 
     def generate_feedforward(self, inputs, activations, learning_on=True):
         self.feedforward_input = activations
@@ -171,4 +153,16 @@ class SRLayer(Layer):
         self.feedforward_node.update_weights(num_iter)
         self.recurrent_node.update_weights(num_iter)
         self.feedback_node.update_weights(num_iter)
+
+    def collect_layer_deltas(self):
+        feedforward_deltas = self.feedforward_node.collect_deltas()
+        recurrent_deltas = self.recurrent_node.update_deltas()
+        feedback_deltas = self.feedback_node.update_deltas()
+
+        return [feedforward_deltas, recurrent_deltas, feedback_deltas]
+
+    def update_layer_deltas(self):
+        self.feedforward_node.update_deltas()
+        self.recurrent_node.update_deltas()
+        self.feedback_node.update_deltas()
 

@@ -9,15 +9,29 @@ from copy import copy
 __author__ = 'ptoth'
 
 
-def network_runner(sequence, network):
+def network_runner(network, sequence):
 
+    print "inside network runner"
     output_errors = []
     for sample in sequence:
         pred, error = network.run(sample)
         output_errors.append(error)
 
-    return network.layers, output_errors
+    print output_errors, network.layers
+    return network, output_errors
 
+result_list = []
+
+
+def dummy(inp):
+    return 2
+
+
+def log_result(result):
+    # This is called whenever foo_pool(i) returns a result.
+    # result_list is modified only by the main process, not the pool workers.
+    print result
+    result_list.append(result)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +39,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-     # Load up the training data
+    # Load up the training data
     _LOGGER.info('Loading training data')
     input_file = 'data_prepared/bach_goldberg_aria_10'
     # X_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
@@ -42,19 +56,42 @@ if __name__ == "__main__":
 
     network = SRNetwork(config['network'])
 
-    input_tensor = X_train_freq[0:1]
+    input_tensor = X_train_freq[0:2]
     max_value = np.max(input_tensor)
     input_tensor /= max_value
     input_tensor = (input_tensor + 1.0) / 2.0
 
     epochs = config['global']['epochs']
 
-    output = []
+    output_ = []
+    output = mp.Queue()
 
-    args = [(input_tensor[i][15:20], network) for i in range(input_tensor.shape[0])]
+    args = [input_tensor[i][15:16] for i in range(input_tensor.shape[0])]
 
     pool = mp.Pool(processes=2)
-    results = [pool.apply_async(network_runner, args=inp) for inp in args]
-    output = [p.get() for p in results]
 
-    print len(output)
+    for inp in args:
+        pool.apply_async(network_runner, args=(copy(network), inp), callback=log_result)
+
+    pool.close()
+    pool.join()
+    print(result_list)
+
+    # # Setup a list of processes that we want to run
+    # processes = [mp.Process(target=network_runner, args=(network, inp)) for inp in args]
+    #
+    # # Run processes
+    # for p in processes:
+    #     p.start()
+    #
+    # # Exit the completed processes
+    # for p in processes:
+    #     p.join()
+    #
+    # # Get process results from the output queue
+    # results = [output.get() for p in processes]
+    #
+    # for network, error in results:
+    #     print error
+
+

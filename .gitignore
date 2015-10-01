@@ -67,3 +67,4 @@ resources/
 *.pickle
 
 recogenv/
+*.csv

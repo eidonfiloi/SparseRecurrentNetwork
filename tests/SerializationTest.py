@@ -32,13 +32,16 @@ class SerializationTest(unittest.TestCase):
 
         weights = network.layers[0].feedforward_node.weights
 
-        network.serialize('test_network_serialized.pickle')
+        with open('test_network_serialized.pickle', 'wb') as f:
+            pickle.dump(network, f)
+
+        # network.serialize('test_network_serialized.pickle')
 
         with open('test_network_serialized.pickle', "rb") as f:
             x = pickle.load(f)
-            network_loaded = SRNetwork(params['network'], x)
+            network_loaded = x
 
-        print network_loaded.name
+        print network_loaded
 
         self.assertTrue((weights[0] == network_loaded.layers[0].feedforward_node.weights[0]).all())
 
