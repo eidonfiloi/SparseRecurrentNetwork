@@ -38,6 +38,7 @@ def get_config():
 
     layer1 = {
         'name': "layer1",
+        'verbose': verbose,
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer1-feedforward",
@@ -121,6 +122,7 @@ def get_config():
 
     layer2 = {
         'name': "layer2",
+        'verbose': verbose,
         'repeat_factor': 1,
         'feedforward': {
             'name': "layer2-feedforward",
@@ -204,6 +206,7 @@ def get_config():
 
     layer3 = {
         'name': "layer3",
+        'verbose': verbose,
         'repeat_factor': 1,
         'feedforward': {
             'name': "layer3-feedforward",
@@ -287,6 +290,7 @@ def get_config():
 
     layer4 = {
         'name': "layer4",
+        'verbose': verbose,
         'repeat_factor': 1,
         'feedforward': {
             'name': "layer3-feedforward",

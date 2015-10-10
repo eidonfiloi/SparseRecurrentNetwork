@@ -6,13 +6,13 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 30
+        'epochs': 1
     }
 
     update_epochs = 1
 
     verbose = 1
-    activation_function = "SoftMax"
+    activation_function = "Sigmoid"
     activation_threshold = 0.5
     min_w = -1.0
     max_w = 1.0
@@ -29,7 +29,7 @@ def get_config():
     make_sparse = False
     target_sparsity = 0.1
     layer_repeat_factor = 1
-    momentum = 0.5
+    momentum = 0.9
     local_activation_radius = 0.2
     is_transpose_reconstruction = True
     regularization = 0.0
@@ -37,12 +37,13 @@ def get_config():
 
     layer1 = {
         'name': "layer1",
+        'verbose': verbose,
         'repeat_factor': layer_repeat_factor,
         'feedforward': {
             'name': "layer1-feedforward",
             'node_type': node_type,
-            'inputs_size': 512,
-            'output_size': 256,
+            'inputs_size': 64,
+            'output_size': 64,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -67,8 +68,8 @@ def get_config():
         'recurrent': {
             'name': "layer1-recurrent",
             'node_type': node_type,
-            'inputs_size': 512,
-            'output_size': 256,
+            'inputs_size': 128,
+            'output_size': 64,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -92,10 +93,10 @@ def get_config():
         },
         'feedback': {
             'name': "layer1-feedback",
-            'node_type': "FeedForwardNode",
-            'inputs_size': 512,
-            'output_size': 256,
-            'activation_function': "SoftMax",
+            'node_type': node_type,
+            'inputs_size': 128,
+            'output_size': 32,
+            'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
             'min_weight': min_w,
@@ -120,12 +121,13 @@ def get_config():
 
     layer2 = {
         'name': "layer2",
+        'verbose': verbose,
         'repeat_factor': 1,
         'feedforward': {
             'name': "layer2-feedforward",
             'node_type': node_type,
-            'inputs_size': 512,
-            'output_size': 256,
+            'inputs_size': 128,
+            'output_size': 64,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -150,8 +152,8 @@ def get_config():
         'recurrent': {
             'name': "layer2-recurrent",
             'node_type': node_type,
-            'inputs_size': 512,
-            'output_size': 256,
+            'inputs_size': 128,
+            'output_size': 64,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -176,8 +178,8 @@ def get_config():
         'feedback': {
             'name': "layer2-feedback",
             'node_type': node_type,
-            'inputs_size': 512,
-            'output_size': 256,
+            'inputs_size': 128,
+            'output_size': 64,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -203,12 +205,13 @@ def get_config():
 
     layer3 = {
         'name': "layer3",
+        'verbose': verbose,
         'repeat_factor': 1,
         'feedforward': {
             'name': "layer3-feedforward",
             'node_type': node_type,
-            'inputs_size': 512,
-            'output_size': 256,
+            'inputs_size': 128,
+            'output_size': 64,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -233,8 +236,8 @@ def get_config():
         'recurrent': {
             'name': "layer3-recurrent",
             'node_type': node_type,
-            'inputs_size': 512,
-            'output_size': 256,
+            'inputs_size': 128,
+            'output_size': 64,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -259,8 +262,8 @@ def get_config():
         'feedback': {
             'name': "layer3-feedback",
             'node_type': node_type,
-            'inputs_size': 256,
-            'output_size': 256,
+            'inputs_size': 64,
+            'output_size': 64,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -287,10 +290,11 @@ def get_config():
     params['network'] = {
         'name': "alpha_network",
         'verbose': verbose,
+        'inputs_size': 32,
         'serialize': False,
         'serialize_path': 'serialized_models',
-        'activation_function': "SoftMax",
-        'loss_function': "CROSS_ENTROPY",
+        'activation_function': "Sigmoid",
+        'loss_function': "MSE",
         'visualize_states': False,
         'update_epochs': update_epochs,
         'input': {

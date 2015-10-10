@@ -3,10 +3,13 @@ __author__ = 'eidonfiloi'
 import logging
 import matplotlib.pyplot as plt
 from recurrent_network.Network import *
-import config.sr_network_configuration as base_config
+import config.forecast_network_configuration as base_config
 from data_io.audio_data_utils import *
 import pickle
+import json
 from copy import copy
+import csv
+import math
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,117 +19,134 @@ if __name__ == "__main__":
 
      # Load up the training data
     _LOGGER.info('Loading training data')
-    input_file = 'data_prepared/bach_goldberg_aria_10'
-    # X_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
-    X_train_freq = np.load(input_file + '_x.npy')
-    # y_train is a tensor of size (num_train_examples, num_timesteps, num_frequency_dims)
-    y_train_freq = np.load(input_file + '_y.npy')
-    # X_mean is a matrix of size (num_frequency_dims,) containing the mean for each frequency dimension
-    X_mean_freq = np.load(input_file + '_mean.npy')
-    # X_var is a matrix of size (num_frequency_dims,) containing the variance for each frequency dimension
-    X_var_freq = np.load(input_file + '_var.npy')
+
+    forecast_data = dict()
+    data_keys = None
+    current_store = None
+    # with open("data_io/forecast_data.csv", 'rb') as f:
+    #     for idx, lines in enumerate(f):
+    #         if idx > 0:
+    #             line_arr = lines.split(',')
+    #             side = line_arr[0]
+    #             id = line_arr[1]
+    #             store = line_arr[2]
+    #             day = line_arr[3]
+    #             data = np.array(line_arr[4:25], dtype='|S4').astype('float')
+    #             if current_store is None or current_store != store:
+    #                 forecast_data[store] = {
+    #                     'train': [(id, day, data)],
+    #                     'validation': [],
+    #                     'test': [],
+    #                 }
+    #             else:
+    #                 forecast_data[store][side].append((id, day, data))
+    #             current_store = copy(store)
+    # data_keys = forecast_data.keys()
+    with open("data_io/forecast_data_scaled.pickle", 'rb') as f:
+        forecast_data = pickle.load(f)
+        data_keys = forecast_data.keys()
     _LOGGER.info('Finished loading training data')
 
     config = base_config.get_config()
 
-    load_model = False
+    # network = SRNetwork(config['network'])
 
-    if load_model:
-        with open('serialized_models/aria_network_10ep.pickle', "rb") as f:
-            network_data = pickle.load(f)
-            network = SRNetwork(config['network'], network_data)
-    else:
-        network = SRNetwork(config['network'])
-
-    # input_sample = X_train_freq[0]
-    # output = []
-    # for i in range(input_sample.shape[0]):
-    #     output.append(input_sample[i])
-    # for i in xrange(len(output)):
-    #     output[i] *= X_var_freq
-    #     output[i] += X_mean_freq
-    # save_generated_example("bach_golberg_test.wav", output, useTimeDomain=False)
-
-    input_sample = X_train_freq[1]
-    max_value = np.max(input_sample)
-    input_sample /= max_value
-    input_sample = (input_sample + 1.0) / 2.0
-    input_sample_y = y_train_freq[0]
+    sales_mean = 6.98716
+    sales_sd = 3.537734
+    sales_max = 10.635
 
     epochs = config['global']['epochs']
 
-    output = []
+    preds = []
+    targets = []
 
     feedforward_errors = {layer['name']: [] for layer in config['network']['layers']}
     recurrent_errors = {layer['name']: [] for layer in config['network']['layers']}
     feedback_errors = {layer['name']: [] for layer in config['network']['layers']}
-    output_mse = []
-    current_j = 0
-    prev_j = -1
+    output_error = []
     prev_output = None
-    for j in range(epochs):
-        for i in range(input_sample.shape[0]):
-            #for k in range(X_train.shape[0]):
-            #for i in range(X_train.shape[1]):
-            input_ = input_sample[i]#X_train[k][i]
-            _LOGGER.info(
+    kaggle_preds = []
+    for k, v in forecast_data.items():
+        network = SRNetwork(config['network'])
+        for j in range(epochs):
+            for id, day, dat in v['train']:
+                _LOGGER.info(
                 '\n############## epoch {0}\n'
-                '############## sequence {1}\n'
-                '############## sample {2}\n '
-                '############## input min is {3}, max is {4}'.format(j, 1, i, np.min(input_), np.max(input_)))
-            network_output, mse = network.run(input_)
-            output_mse.append(mse)
-            if prev_output is not None:
-                    prev_output_bin = np.zeros(prev_output.size).astype('int')
-                    for ind in range(0, prev_output.size):
-                        if prev_output[ind] > 0.5:
-                            prev_output_bin[ind] = 1
-                        else:
-                            prev_output_bin[ind] = 0
-                    mod_input = np.zeros(input_.size).astype('int')
-                    for ind in range(0, input_.size):
-                        if input_[ind] > 0.5:
-                            mod_input[ind] = 1
-
-                    print '############### epoch: {0}\n' \
-                          '############### sequence: {1}\n' \
-                          '############### input: \n' \
-                          '{2}\n' \
-                          '############### prev_output_bin: \n' \
-                          '{3}\n' \
+                '############## store {1}\n'
+                '############## day {2}\n '
+                '############## data {3}'.format(j, k, day, dat))
+                network_output, error = network.run(dat)
+                output_error.append(error)
+                if prev_output is not None:
+                    _LOGGER.info('############### input: \n' \
+                          '{0}\n' \
                           '############### prev_output: \n' \
-                          '{4}\n' \
-                          'output_error: {5}'.format(j, i, input_, prev_output_bin, prev_output, mse)
-                    plt.ion()
-                    plt.axis([-1, 90, -1, 98])
-                    x_r, y_r = np.argwhere(mod_input.reshape(90, 98) == 1).T
-                    x_t, y_t = np.argwhere(prev_output_bin.reshape(90, 98) == 1).T
-                    plt.scatter(x_r, y_r, alpha=0.5, c='r', marker='s', s=15)
-                    plt.scatter(x_t, y_t, alpha=0.5, c='b', marker='o', s=13)
-                    plt.draw()
-                    time.sleep(0.1)
-                    plt.clf()
-            prev_output = copy(network_output)
-            for key, v in network.feedforward_errors.items():
-                if len(v) > 0:
-                    feedforward_errors[key].append(v[0])
-            for key, v in network.recurrent_errors.items():
-                if len(v) > 0:
-                    recurrent_errors[key].append(v[0])
-            for key, v in network.feedback_errors.items():
-                if len(v) > 0:
-                    feedback_errors[key].append(v[0])
-            _LOGGER.info('output length {0}\n{1}'.format(len(network_output), network_output[0:20]))
-            network_output = 2.0*network_output - 1.0
-            output.append(network_output * max_value)
+                          '{1}\n' \
+                          'inp: {2}\n' \
+                          'prev_pred: {3}\n' \
+                          'output_error: {4}'.format(dat[20], prev_output[20], dat, prev_output, error))
+                    if j == epochs - 1:
+                        preds.append(prev_output[20])
+                        targets.append(dat[20])
+                prev_output = copy(network_output)
+                for key, vv in network.feedforward_errors.items():
+                    if len(vv) > 0:
+                        feedforward_errors[key].append(vv[0])
+                for key, vv in network.recurrent_errors.items():
+                    if len(vv) > 0:
+                        recurrent_errors[key].append(vv[0])
+                for key, vv in network.feedback_errors.items():
+                    if len(vv) > 0:
+                        feedback_errors[key].append(vv[0])
+            for id, day, dat in v['validation']:
+                _LOGGER.info(
+                '\n############## epoch {0}\n'
+                '############## store {1}\n'
+                '############## day {2}\n '
+                '############## data {3}'.format(j, k, day, dat))
+                network_output, error = network.run(dat)
+                output_error.append(error)
+                if prev_output is not None:
+                    _LOGGER.info('############### input: \n' \
+                          '{0}\n' \
+                          '############### prev_output: \n' \
+                          '{1}\n' \
+                          'inp: {2}\n' \
+                          'prev_pred: {3}\n' \
+                          'output_error: {4}'.format(dat[20], prev_output[20], dat, prev_output, error))
+                    # if j == epochs - 1:
+                    #     preds.append(prev_output[20])
+                    #     targets.append(dat[20])
+                prev_output = copy(network_output)
+                for key, vv in network.feedforward_errors.items():
+                    if len(vv) > 0:
+                        feedforward_errors[key].append(vv[0])
+                for key, vv in network.recurrent_errors.items():
+                    if len(vv) > 0:
+                        recurrent_errors[key].append(vv[0])
+                for key, vv in network.feedback_errors.items():
+                    if len(vv) > 0:
+                        feedback_errors[key].append(vv[0])
+        starting_dat = v['validation'][2][-1]
+        network_output, error = network.run(starting_dat, learning_on=False)
+        for id, day, dat in v['test']:
+            dat[20] = network_output[20]
+            kaggle_preds.append((id, math.exp(sales_max*network_output[20]) - 1.0))
+            network_output, error = network.run(dat)
 
-    for i in xrange(len(output)):
-        output[i] *= X_var_freq
-        output[i] += X_mean_freq
-    save_generated_example("bach_goldberg_aria_10.wav", output, useTimeDomain=False)
+    with open('data_prepared/rossmann_full_single.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+        writer.writerow(['Id', 'Sales'])
+        for ids, sales in kaggle_preds:
+            writer.writerow([ids, sales])
 
-    if config['network']['serialize']:
-        network.serialize()
+    # preds_vs_target = {
+    #     'preds': preds,
+    #     'targets': targets
+    # }
+    #
+    # with open("data_prepared/forecast_preds_target.json", 'wb') as fo:
+    #     json.dump(preds_vs_target, fo)
 
     plt.ioff()
     plt.subplot(4, 1, 1)
@@ -157,10 +177,18 @@ if __name__ == "__main__":
     plt.legend(loc=1)
 
     plt.subplot(4, 1, 4)
-    plt.plot(range(len(output_mse)), output_mse, label="mse")
+    plt.plot(range(len(output_error)), output_error, label="mse")
     plt.xlabel('epochs')
     plt.ylabel('output_mse')
     # plt.title('recurrent_errors')
     plt.legend(loc=1)
+
+    # plt.subplot(1, 1, 1)
+    # plt.plot(range(len(preds)), preds, label="preds")
+    # plt.plot(range(len(targets)), targets, label="targets")
+    # plt.xlabel('epochs')
+    # plt.ylabel('sales')
+    # # plt.title('recurrent_errors')
+    # plt.legend(loc=1)
 
     plt.show()

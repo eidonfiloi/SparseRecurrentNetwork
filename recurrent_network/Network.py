@@ -23,7 +23,9 @@ class Network(object):
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.parameters = parameters
+        self.verbose = self.parameters['verbose']
         self.layers = [Layer(layer_conf) for layer_conf in self.parameters['layers']]
+        self.input_size = self.parameters['inputs_size']
         self.name = self.parameters['name']
         self.serialize_path = self.parameters['serialize_path']
         self.num_layers = len(self.layers)
@@ -83,7 +85,7 @@ class SRNetwork(Network):
         self.feedback_deltas = {layer.name: [] for layer in self.layers}
 
         self.previous_prediction = np.zeros(self.layers[0].feedback_node.output_size)
-        self.previous_inputs = np.zeros(self.previous_prediction.shape)
+        self.previous_inputs = np.zeros(self.input_size)
 
     def __getstate__(self):
         parent_state = Network.__getstate__(self)
@@ -104,9 +106,9 @@ class SRNetwork(Network):
         self.feedback_deltas = {layer.name: [] for layer in self.layers}
 
         self.previous_prediction = np.zeros(self.layers[0].feedback_node.output_size)
-        self.previous_inputs = np.zeros(self.previous_prediction.shape)
+        self.previous_inputs = np.zeros(self.input_size)
 
-    def run(self, inputs, learning_on=True):
+    def run(self, inputs, target_out=None, learning_on=True):
         self.feedforward_errors = {layer.name: [] for layer in self.layers}
         self.recurrent_errors = {layer.name: [] for layer in self.layers}
         self.feedback_errors = {layer.name: [] for layer in self.layers}
@@ -123,12 +125,14 @@ class SRNetwork(Network):
         prediction = self.feedforward_pass(np.concatenate((self.previous_inputs, inputs)))
         if learning_on:
             # output_error_delta = Loss.delta(self.previous_prediction, inputs, self.loss_function)
-            output_error = Loss.error(self.previous_prediction, inputs, self.loss_function)
-            self.logger.info('output error is {0}'.format(output_error))
+            target = inputs if target_out is None else target_out
+            output_error = Loss.error(self.previous_prediction, target, self.loss_function)
+            if self.verbose is not None and self.verbose > 0:
+                self.logger.info('output error is {0}'.format(output_error))
             # delta_backpropagate = output_error_delta * Activations.derivative(self.previous_prediction,
             #                                                                   self.activation_function)
             delta_backpropagate = Loss.delta_backpropagate(self.previous_prediction,
-                                                           inputs,
+                                                           target,
                                                            self.loss_function,
                                                            self.activation_function)
             self.backpropagate(delta_backpropagate)

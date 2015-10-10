@@ -319,7 +319,7 @@ class SRAutoEncoderNode(FeedForwardNode):
         error_diff = recon - output_target
 
         mse = sqrt(np.mean(np.abs(error_diff) ** 2, axis=0))
-        self.logger.info('{0}: error is {1}'.format(self.name, mse))
+        # self.logger.info('{0}: error is {1}'.format(self.name, mse))
 
         if self.dropout_ratio is not None:
             recon_delta = (error_diff * Activations.derivative(recon, self.activation_function)) * self.dropout

@@ -19,6 +19,7 @@ class Layer(object):
 
         self.parameters = parameters
         self.name = self.parameters['name']
+        self.verbose = self.parameters['verbose']
 
     def serialize(self):
         return {'parameters': self.parameters}
@@ -122,17 +123,20 @@ class SRLayer(Layer):
         return self.feedback_output, self.feedback_node.activations, error
 
     def backpropagate_feedback(self, delta):
-        self.logger.info('{0}-feedback mean delta: {1}'.format(self.name, np.mean(delta)))
+        if self.verbose is not None and self.verbose > 0:
+            self.logger.info('{0}-feedback mean delta: {1}'.format(self.name, np.mean(delta)))
         result = self.feedback_node.backpropagate(self.prev_feedback_input, delta)
         return result
 
     def backpropagate_recurrent(self, delta):
-        self.logger.info('{0}-recurrent mean delta: {1}'.format(self.name, np.mean(delta)))
+        if self.verbose is not None and self.verbose > 0:
+            self.logger.info('{0}-recurrent mean delta: {1}'.format(self.name, np.mean(delta)))
         result = self.recurrent_node.backpropagate(self.prev_recurrent_input, delta)
         return result
 
     def backpropagate_feedforward(self, delta):
-        self.logger.info('{0}-feedforward mean delta: {1}'.format(self.name, np.mean(delta)))
+        if self.verbose is not None and self.verbose > 0:
+            self.logger.info('{0}-feedforward mean delta: {1}'.format(self.name, np.mean(delta)))
         result_delta = self.feedforward_node.backpropagate(self.prev_feedforward_input, delta)
         return result_delta
 
