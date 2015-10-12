@@ -57,7 +57,7 @@ class SRLayer(Layer):
         self.recurrent_input = None
         self.recurrent_output = None
         self.recurrent_output_activations = None
-        self.prev_recurrent_input = np.random.rand(self.feedforward_node.activations.size + self.recurrent_node.output_size)
+        self.prev_recurrent_input = np.random.rand(self.recurrent_node.inputs_size)
         self.prev_recurrent_output = np.random.rand(self.recurrent_node.activations.size)
         self.prev_recurrent_output_activations = np.random.rand(self.recurrent_node.activations.size)
 

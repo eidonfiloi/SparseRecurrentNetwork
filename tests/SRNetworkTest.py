@@ -1,6 +1,7 @@
 __author__ = 'ptoth'
 
 import config.sr_network_configuration_test as base_config
+import config.sym_network_config_test as base_config
 import unittest
 from recurrent_network.Network import *
 import numpy as np
@@ -13,7 +14,8 @@ class SRNetworkTest(unittest.TestCase):
     def test_init(self):
         logging.basicConfig(level=logging.INFO)
         config = base_config.get_config()
-        network = SRNetwork(config['network'])
+        # network = SRNetwork(config['network'])
+        network = SymmetricNetwork(config['network'])
 
         long_sequence = np.array([
             [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -50,7 +52,7 @@ class SRNetworkTest(unittest.TestCase):
             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
         ])
 
-        input_series = long_sequence #simple_sequence #long_sequence #constant
+        input_series = simple_sequence #simple_sequence #long_sequence #constant
 
         sd_input_series = preprocessing.scale(input_series)
 
