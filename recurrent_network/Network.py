@@ -35,6 +35,7 @@ class Network(object):
         self.visualize_states = self.parameters['visualize_states']
         self.update_epochs = self.parameters['update_epochs']
         self.update_epochs_counter = 0
+        self.curriculum_rate = self.parameters['curriculum_rate']
 
     def serialize(self, path=None, save=True):
         if path is None:
@@ -53,7 +54,6 @@ class Network(object):
     def __setstate__(self, dict):
         self.layers = dict['layers']
         self.logger = logging.getLogger(self.__class__.__name__)
-
 
     @abc.abstractmethod
     def run(self, inputs):
@@ -122,7 +122,10 @@ class SRNetwork(Network):
         self.feedback_deltas = {layer.name: [] for layer in self.layers}
 
         output_error = None
-        prediction = self.feedforward_pass(np.concatenate((self.previous_inputs, inputs)))
+        if self.curriculum_rate is not None and np.random.binomial(1, self.curriculum_rate) == 1:
+            prediction = self.feedforward_pass(np.concatenate((self.previous_inputs, self.previous_prediction)))
+        else:
+            prediction = self.feedforward_pass(np.concatenate((self.previous_inputs, inputs)))
         if learning_on:
             # output_error_delta = Loss.delta(self.previous_prediction, inputs, self.loss_function)
             target = inputs if target_out is None else target_out
@@ -263,3 +266,127 @@ class SRNetwork(Network):
         time.sleep(0.05)
         plt.clf()
 
+
+class SymmetricNetwork(SRNetwork):
+
+    """ Symmetric inputs with dot product output """
+
+    def __init__(self, parameters):
+        super(SymmetricNetwork, self).__init__(parameters)
+
+    def run(self, inputs, target_out=None, learning_on=True):
+        self.feedforward_errors = {layer.name: [] for layer in self.layers}
+        self.recurrent_errors = {layer.name: [] for layer in self.layers}
+        self.feedback_errors = {layer.name: [] for layer in self.layers}
+
+        self.feedforward_outputs = {layer.name: [] for layer in self.layers}
+        self.recurrent_outputs = {layer.name: [] for layer in self.layers}
+        self.feedback_outputs = {layer.name: [] for layer in self.layers}
+
+        self.feedforward_deltas = {layer.name: [] for layer in self.layers}
+        self.recurrent_deltas = {layer.name: [] for layer in self.layers}
+        self.feedback_deltas = {layer.name: [] for layer in self.layers}
+
+        output_error = None
+        prediction = self.feedforward_pass(np.concatenate((self.previous_inputs, inputs)))
+        if learning_on:
+            target = inputs if target_out is None else target_out
+            output_error = Loss.error(self.previous_prediction, target, self.loss_function)
+            if self.verbose is not None and self.verbose > 0:
+                self.logger.info('output error is {0}'.format(output_error))
+            delta_backpropagate = Loss.delta_backpropagate(self.previous_prediction,
+                                                           target,
+                                                           self.loss_function,
+                                                           self.activation_function)
+            self.backpropagate(delta_backpropagate)
+        self.previous_prediction = deepcopy(prediction)
+        self.previous_inputs = deepcopy(inputs)
+        if self.visualize_states:
+            self.visualize_hidden_states(self.feedforward_outputs, self.recurrent_outputs)
+        for l in self.layers:
+                l.cleanup_layer()
+        if self.update_epochs_counter == self.update_epochs:
+            for l in self.layers:
+                l.update_layer_weights(self.update_epochs)
+            self.update_epochs_counter = 0
+        else:
+            self.update_epochs_counter += 1
+
+        return prediction, output_error
+
+    def feedforward_pass(self, inputs, learning_on=True):
+        current_input = inputs
+        current_activation = inputs
+        prediction = None
+
+        for ind, layer in enumerate(self.layers):
+
+            # ###################### feedforward pass ######################
+
+            if ind < self.num_layers - 1:
+
+                current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation, learning_on)
+                self.feedforward_errors[layer.name].append(error)
+                self.feedforward_outputs[layer.name].append(current_input)
+
+                current_input = layer.prev_recurrent_output * current_input
+                current_activation = layer.prev_recurrent_output_activations * current_activation
+
+                recurrent_output, error = layer.generate_recurrent(current_input, current_activation, learning_on)
+                self.recurrent_errors[layer.name].append(error)
+                self.recurrent_outputs[layer.name].append(recurrent_output)
+            else:
+                current_input, current_activation, error = layer.generate_feedforward(current_input, current_activation, learning_on)
+                self.feedforward_errors[layer.name].append(error)
+                self.feedforward_outputs[layer.name].append(current_input)
+
+                current_input = layer.prev_recurrent_output * current_input
+                current_activation = layer.prev_recurrent_output_activations * current_activation
+
+                recurrent_output, error = layer.generate_recurrent(current_input, current_activation, learning_on)
+                self.recurrent_errors[layer.name].append(error)
+                self.recurrent_outputs[layer.name].append(recurrent_output)
+
+                # ###################### feedback pass ######################
+
+                for ind_back, layer_back in enumerate(reversed(self.layers)):
+                    if ind_back == 0:
+                        current_input, current_activation, error = layer_back.generate_feedback(layer_back.recurrent_output, layer_back.recurrent_output_activations, learning_on)
+                        self.feedback_outputs[layer_back.name].append(current_input)
+                        self.feedback_errors[layer_back.name].append(error)
+                    elif ind_back == self.num_layers - 1:
+                        prediction, current_activation, error = layer_back.generate_feedback(
+                            layer_back.recurrent_output*current_input,
+                            layer_back.recurrent_output_activations*current_activation, learning_on)
+                        self.feedback_errors[layer_back.name].append(error)
+                        prediction = current_activation
+                    else:
+                        current_input, current_activation, error = layer_back.generate_feedback(
+                            layer_back.recurrent_output*current_input,
+                            layer_back.recurrent_output_activations*current_activation, learning_on)
+                        self.feedback_outputs[layer_back.name].append(current_input)
+                        self.feedback_errors[layer_back.name].append(error)
+
+        return prediction
+
+    def backpropagate(self, delta_backpropagate):
+        if delta_backpropagate is not None:
+
+            # ###################### backpropagation on feedback and recurrent ######################
+
+            for ind_backprop, layer_backprop in enumerate(self.layers):
+                delta_backpropagate = layer_backprop.backpropagate_feedback(delta_backpropagate)
+                self.feedback_deltas[layer_backprop.name].append(delta_backpropagate)
+                if ind_backprop == self.num_layers - 1:
+                    delta_backpropagate = layer_backprop.backpropagate_recurrent(delta_backpropagate)
+                    self.recurrent_deltas[layer_backprop.name].append(delta_backpropagate)
+
+                    # ###################### backpropagation for feedforward ######################
+
+                    for ind_backprop_back, layer_backprop_back in enumerate(reversed(self.layers)):
+                        forward_delta = copy(delta_backpropagate)
+                        delta_backpropagate = layer_backprop_back.backpropagate_feedforward(forward_delta)
+                        self.feedforward_deltas[layer_backprop_back.name].append(delta_backpropagate)
+                else:
+                    rec_delta_backpropagate = layer_backprop.backpropagate_recurrent(delta_backpropagate)
+                    self.recurrent_deltas[layer_backprop.name].append(rec_delta_backpropagate)

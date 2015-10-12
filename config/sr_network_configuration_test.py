@@ -34,6 +34,7 @@ def get_config():
     local_activation_radius = None
     is_transpose_reconstruction = True
     regularization = 0.0
+    curriculum_rate = None
     node_type = "SRAutoEncoderNode"
 
     layer1 = {
@@ -206,6 +207,8 @@ def get_config():
 
     params['network'] = {
         'name': "test_network",
+        'inputs_size': 16,
+        'curriculum_rate': curriculum_rate,
         'serialize': False,
         'serialize_path': '../serialized_models',
         'verbose': verbose,

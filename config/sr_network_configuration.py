@@ -34,6 +34,7 @@ def get_config():
     local_activation_radius = 0.2
     is_transpose_reconstruction = True
     regularization = 0.0
+    curriculum_rate = None
     node_type = "SRAutoEncoderNode"
 
     layer1 = {
@@ -374,6 +375,8 @@ def get_config():
 
     params['network'] = {
         'name': "aria_network_10ep",
+        'inputs_size': 8820,
+        'curriculum_rate': curriculum_rate,
         'verbose': verbose,
         'serialize': False,
         'serialize_path': 'serialized_models',

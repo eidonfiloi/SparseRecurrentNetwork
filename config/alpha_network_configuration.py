@@ -33,6 +33,7 @@ def get_config():
     local_activation_radius = 0.2
     is_transpose_reconstruction = True
     regularization = 0.0
+    curriculum_rate = None
     node_type = "SRAutoEncoderNode"
 
     layer1 = {
@@ -291,6 +292,7 @@ def get_config():
         'name': "alpha_network",
         'verbose': verbose,
         'inputs_size': 32,
+        'curriculum_rate': curriculum_rate,
         'serialize': False,
         'serialize_path': 'serialized_models',
         'activation_function': "Sigmoid",
