@@ -24,7 +24,7 @@ def one_hot_decode(arr):
 
 
 def binary_vector(tup):
-    return np.array([1 if idx in list(tup) else 0 for idx in range(32)])
+    return np.array([1 if idx in list(tup) else 0 for idx in range(20)])
 
 
 def get_closest_word(pred, sett):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     output_mse = []
     output_preds = []
 
-    test_sdr_dict = "data_prepared/opensub2013_dict.pickle"
+    test_sdr_dict = "data_prepared/opensub2013_dict_1m.pickle"
     sdr_dict = None
     with open(test_sdr_dict, 'rb') as f:
         sdr_dict = pickle.load(f)
@@ -57,40 +57,48 @@ if __name__ == "__main__":
 
     print "sdr to words size: ", len(sdr_to_word)
 
-    sdr_eof = tuple(np.random.choice(32, 8, False))
+    sdr_eof = tuple(np.random.choice(20, 8, False))
     while sdr_eof in sdr_to_word:
-        sdr_eof = tuple(np.random.choice(32, 8, False))
+        sdr_eof = tuple(np.random.choice(20, 8, False))
 
     sdr_to_word[sdr_eof] = u'ENDOFSENTENCE'
     word_to_sdr[u'ENDOFSENTENCE'] = sdr_eof
 
     prev_pred = None
-    for j in range(epochs):
-        with open(text_data_path, 'rb') as f:
-            for i, line in enumerate(f):
-                if i < 5000:
+    prev_line = None
+
+    with open(text_data_path, 'rb') as f:
+        for i, line in enumerate(f):
+            if i % 2 == 0:
+                prev_line = copy(line)
+            else:
+                for j in range(epochs):
                     print '######################### line {0}'.format(i)
-                    # arr = [ord(ch) for ch in list(line)]
-                    # tokens = nltk.word_tokenize(line.decode('utf-8').strip())
+                    prev_tokens = (prev_line + " ENDOFSENTENCE").split(" ")
                     tokens = (line + " ENDOFSENTENCE").split(" ")
                     output_arr = []
+                    _LOGGER.info('input: {0}'.format(prev_line))
                     _LOGGER.info('input: {0}'.format(line))
-                    for el in tokens:
+                    for el in prev_tokens:
                         # inp = _CHARS_ONE_HOT[el]
                         inp = binary_vector(word_to_sdr[el.decode('utf-8')])
                         pred, error = network.run(inp)
                         output_mse.append(error)
                         if prev_pred is not None:
+                            mod_prev_pred = np.zeros(prev_pred.size).astype('int')
+                            for ind in range(0, prev_pred.size):
+                                if prev_pred[ind] > 0.5:
+                                    mod_prev_pred[ind] = 1
                             print '################ \n' \
                               'input: {0}\n' \
                               'prev_pred: {1}\n' \
-                              '#################'.format(inp, prev_pred)
+                              '#################'.format(inp, mod_prev_pred)
                             # prev_pred_int = one_hot_decode(prev_pred)
                             # prev_pred_ch = chr(prev_pred_int)
                             # prev_pred_vector = _CHARS_ONE_HOT[prev_pred_int]
-                            if i % 50 == 11:
+                            if j == epochs - 1:
                                 closeness, prev_pred_closest_word_tup = get_closest_word(prev_pred, sdr_to_word.keys())
-                                closest_word = sdr_to_word[prev_pred_closest_word_tup].decode('utf-8')
+                                closest_word = sdr_to_word[prev_pred_closest_word_tup]#.decode('utf-8')
                                 output_arr.append(closest_word)
                                 print '############### epoch: {0}\n' \
                                   '############### line: {1}\n' \
@@ -101,9 +109,50 @@ if __name__ == "__main__":
                                   'output_error: {4}\n' \
                                   'closeness: {5}'.format(j, i, el, closest_word, error, closeness)
                             plt.ion()
-                            plt.axis([-1, 8, -1, 4])
-                            x_r, y_r = np.argwhere(inp.reshape(8, 4) >= 0.5).T
-                            x_t, y_t = np.argwhere(prev_pred.reshape(8, 4) >= 0.5).T
+                            plt.axis([-1, 5, -1, 4])
+                            x_r, y_r = np.argwhere(inp.reshape(5, 4) >= 0.5).T
+                            x_t, y_t = np.argwhere(prev_pred.reshape(5, 4) >= 0.5).T
+                            plt.scatter(x_r, y_r, alpha=0.5, c='r', marker='s', s=255)
+                            plt.scatter(x_t, y_t, alpha=0.5, c='b', marker='o', s=245)
+                            plt.draw()
+                            time.sleep(0.1)
+                            plt.clf()
+                        prev_pred = copy(pred)
+                    _LOGGER.info('################### input line: {0}'.format(line))
+                    _LOGGER.info('################### output line: {0}'.format(' '.join(output_arr)))
+                    for el in tokens:
+                        # inp = _CHARS_ONE_HOT[el]
+                        inp = binary_vector(word_to_sdr[el.decode('utf-8')])
+                        pred, error = network.run(inp)
+                        output_mse.append(error)
+                        if prev_pred is not None:
+                            mod_prev_pred = np.zeros(prev_pred.size).astype('int')
+                            for ind in range(0, prev_pred.size):
+                                if prev_pred[ind] > 0.5:
+                                    mod_prev_pred[ind] = 1
+                            print '################ \n' \
+                              'input: {0}\n' \
+                              'prev_pred: {1}\n' \
+                              '#################'.format(inp, mod_prev_pred)
+                            # prev_pred_int = one_hot_decode(prev_pred)
+                            # prev_pred_ch = chr(prev_pred_int)
+                            # prev_pred_vector = _CHARS_ONE_HOT[prev_pred_int]
+                            if j == epochs - 1:
+                                closeness, prev_pred_closest_word_tup = get_closest_word(prev_pred, sdr_to_word.keys())
+                                closest_word = sdr_to_word[prev_pred_closest_word_tup]#.decode('utf-8')
+                                output_arr.append(closest_word)
+                                print '############### epoch: {0}\n' \
+                                  '############### line: {1}\n' \
+                                  '############### input: \n' \
+                                  '{2}\n' \
+                                  '############### prev_pred: \n' \
+                                  '{3}\n' \
+                                  'output_error: {4}\n' \
+                                  'closeness: {5}'.format(j, i, el, closest_word, error, closeness)
+                            plt.ion()
+                            plt.axis([-1, 5, -1, 4])
+                            x_r, y_r = np.argwhere(inp.reshape(5, 4) >= 0.5).T
+                            x_t, y_t = np.argwhere(prev_pred.reshape(5, 4) >= 0.5).T
                             plt.scatter(x_r, y_r, alpha=0.5, c='r', marker='s', s=255)
                             plt.scatter(x_t, y_t, alpha=0.5, c='b', marker='o', s=245)
                             plt.draw()
@@ -122,8 +171,6 @@ if __name__ == "__main__":
                     for key, v in network.feedback_errors.items():
                         if len(v) > 0:
                             feedback_errors[key].append(v[0])
-                else:
-                    break
 
     for lin in output_preds:
         print lin

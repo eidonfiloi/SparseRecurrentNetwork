@@ -6,7 +6,7 @@ def get_config():
     params = {}
 
     params['global'] = {
-        'epochs': 1
+        'epochs': 30
     }
 
     update_epochs = 1
@@ -43,8 +43,8 @@ def get_config():
         'feedforward': {
             'name': "layer1-feedforward",
             'node_type': node_type,
-            'inputs_size': 64,
-            'output_size': 64,
+            'inputs_size': 40,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -69,8 +69,8 @@ def get_config():
         'recurrent': {
             'name': "layer1-recurrent",
             'node_type': node_type,
-            'inputs_size': 128,
-            'output_size': 64,
+            'inputs_size': 40,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -95,8 +95,8 @@ def get_config():
         'feedback': {
             'name': "layer1-feedback",
             'node_type': node_type,
-            'inputs_size': 128,
-            'output_size': 32,
+            'inputs_size': 40,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -127,8 +127,8 @@ def get_config():
         'feedforward': {
             'name': "layer2-feedforward",
             'node_type': node_type,
-            'inputs_size': 128,
-            'output_size': 64,
+            'inputs_size': 40,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -153,8 +153,8 @@ def get_config():
         'recurrent': {
             'name': "layer2-recurrent",
             'node_type': node_type,
-            'inputs_size': 128,
-            'output_size': 64,
+            'inputs_size': 40,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -179,8 +179,8 @@ def get_config():
         'feedback': {
             'name': "layer2-feedback",
             'node_type': node_type,
-            'inputs_size': 128,
-            'output_size': 64,
+            'inputs_size': 40,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -211,8 +211,8 @@ def get_config():
         'feedforward': {
             'name': "layer3-feedforward",
             'node_type': node_type,
-            'inputs_size': 128,
-            'output_size': 64,
+            'inputs_size': 40,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -237,8 +237,8 @@ def get_config():
         'recurrent': {
             'name': "layer3-recurrent",
             'node_type': node_type,
-            'inputs_size': 128,
-            'output_size': 64,
+            'inputs_size': 40,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -263,8 +263,8 @@ def get_config():
         'feedback': {
             'name': "layer3-feedback",
             'node_type': node_type,
-            'inputs_size': 64,
-            'output_size': 64,
+            'inputs_size': 20,
+            'output_size': 20,
             'activation_function': activation_function,
             'activation_threshold': activation_threshold,
             'lifetime_sparsity': lifetime_sparsity,
@@ -291,7 +291,7 @@ def get_config():
     params['network'] = {
         'name': "alpha_network",
         'verbose': verbose,
-        'inputs_size': 32,
+        'inputs_size': 20,
         'curriculum_rate': curriculum_rate,
         'serialize': False,
         'serialize_path': 'serialized_models',
