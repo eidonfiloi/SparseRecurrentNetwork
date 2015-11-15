@@ -1,4 +1,5 @@
-# **SparseRecurrentNetwork** #
+# **SparseRecurrentNetwork** # 
+![alt tag](https://cloud.githubusercontent.com/assets/2136696/10122122/01a21b5e-6537-11e5-9fda-cdddc45e3593.png)
 
 SparseRecurrentNetwork is an experimental framework for developing and testing deep, recurrent neural networks for sequence prediction. It is based on an experimental architecture that uses among others
 
