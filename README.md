@@ -1,12 +1,8 @@
 # **SparseRecurrentNetwork** #
-
 SparseRecurrentNetwork is an experimental framework for developing and testing deep, recurrent neural networks for sequence prediction. It relies on Tensor Factorization based optimization:
-
 ### Unsupervised Feature Tensor Creation ###
-![recog 001](https://cloud.githubusercontent.com/assets/2136696/11167867/a1ba03b8-8ba7-11e5-9e22-80ba7787e0ee.png)
 
 ### Optimizing by Tensor Factorization ###
-![recog 002](https://cloud.githubusercontent.com/assets/2136696/11167868/a1f23198-8ba7-11e5-8858-35b09153f9fe.png)
 
 The experimental architecture uses among others
 
