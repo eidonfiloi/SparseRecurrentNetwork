@@ -1,14 +1,11 @@
-import abc
-
-from Layer import *
 import logging
-import matplotlib.pyplot as plt
 import time
-from math import sqrt
-from utils.Activations import *
-from utils.Loss import *
 import pickle
-import datetime
+
+import matplotlib.pyplot as plt
+
+from tensor_factorization.core_network.Layer import *
+from utils.Loss import *
 
 __author__ = 'ptoth'
 
